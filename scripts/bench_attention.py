@@ -60,11 +60,10 @@ def main():
     headdim = 128
     heads = 32
     cases = [
-        (1, 1024, False),
-        (1, 2048, False),
-        (1, 4096, False),
-        (2, 2048, False),
-        (1, 2048, True),
+        (1, 1024),
+        (1, 2048),
+        (1, 4096),
+        (2, 2048),
     ]
 
     print(f"GPU : {torch.cuda.get_device_name(0)}")
@@ -73,8 +72,8 @@ def main():
 
     results = []
     print(f"{'case':>18} {'mode':>9} {'median(ms)':>11} {'TFLOPS':>9} {'vs잠금상한':>10}")
-    for batch, seqlen, bwd in cases:
-        for bwd_i, mode in ((bwd, "fwd+bwd"), (False, "fwd")) if not bwd else ((True, "fwd+bwd"),):
+    for batch, seqlen in cases:
+        for bwd_i, mode in ((False, "fwd"), (True, "fwd+bwd")):
             med = bench_attention(batch, heads, seqlen, headdim, args.iters, True, bwd_i)
             flops = (12 if bwd_i else 4) * batch * heads * seqlen * seqlen * headdim
             tflops = flops / med / 1e12

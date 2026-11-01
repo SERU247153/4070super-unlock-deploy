@@ -20,6 +20,25 @@ echo "== FlashAttention 벤치마크 =="
 echo "  GPU    : $(nvidia-smi --query-gpu=name --format=csv,noheader | head -1)"
 echo "  실행   : 컨테이너 '$BENCH_CONTAINER' (docker exec)"
 
+# ---- 클럭 고정 (GEMM 벤치와 동일 조건) ----
+LOCKED=0
+PM_WAS_ENABLED=0
+if [ "$BENCH_LOCK_CLOCKS" != "off" ]; then
+  if nvidia-smi -q | grep -qi 'Persistence Mode.*: Enabled'; then PM_WAS_ENABLED=1; fi
+  sudo nvidia-smi -pm 1 >/dev/null 2>&1 || true
+  if sudo nvidia-smi -lgc "$BENCH_LOCK_CLOCKS" >/dev/null 2>&1; then
+    LOCKED=1
+    printf "클럭 고정 적용: %s MHz\n" "$BENCH_LOCK_CLOCKS"
+  fi
+fi
+cleanup_clocks() {
+  if [ "$LOCKED" = "1" ]; then
+    sudo nvidia-smi -rgc >/dev/null 2>&1 || true
+    [ "$PM_WAS_ENABLED" = "1" ] || sudo nvidia-smi -pm 0 >/dev/null 2>&1 || true
+  fi
+}
+trap cleanup_clocks EXIT
+
 set +e
 docker cp "$SCRIPT_DIR/bench_attention.py" "$BENCH_CONTAINER:/tmp/bench_attention.py"
 docker exec "$BENCH_CONTAINER" python /tmp/bench_attention.py --out /tmp/attention_result.json
