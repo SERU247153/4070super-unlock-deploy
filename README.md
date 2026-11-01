@@ -21,8 +21,8 @@
 ## 서버에 배포 (git clone)
 
 ```bash
-# 서버에서 (저장소가 private이면 GitHub 로그인 또는 deploy 키 필요)
-git clone git@github.com:<사용자명>/4070super-unlock-deploy.git /opt/gpu-unlock-deploy
+# 서버에서 (private 저장소 — 최초 클론 시 GitHub 로그인/PAT 필요)
+git clone https://github.com/SERU247153/4070super-unlock-deploy.git /opt/gpu-unlock-deploy
 cd /opt/gpu-unlock-deploy
 ```
 
