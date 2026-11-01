@@ -78,7 +78,7 @@ flowchart LR
 ## 🚀 빠른 시작
 
 ```bash
-# 서버에서 (private 저장소 — 최초 클론 시 GitHub 로그인/PAT 필요)
+# 서버에서 (공개 저장소)
 git clone https://github.com/SERU247153/4070super-unlock-deploy.git /opt/gpu-unlock-deploy
 cd /opt/gpu-unlock-deploy
 ```
