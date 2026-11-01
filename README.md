@@ -37,19 +37,19 @@ NVIDIA는 GeForce 카드의 **FP16 / BF16 / TF32 텐서 연산을 의도적으�
 
 **언록 전/후 GEMM 처리량** (8192³, FP32 누적, 클럭 2505 MHz 고정) — BF16 69.1 → 132.9 TFLOPS (+92%):
 
-![언록 전후 GEMM](../assets/chart_unlock.png)
+![언록 전후 GEMM](assets/chart_unlock.png)
 
 **전력 제한별 처리량** — 180W에서 이미 최대 성능에 도달 (24/7 운영 스위트 스팟):
 
-![전력 스윕](../assets/chart_power_sweep.png)
+![전력 스윕](assets/chart_power_sweep.png)
 
 **클럭별 처리량과 효율** — 풀부하 클럭은 ~2400 MHz에서 포화, 효율 93~97%:
 
-![클럭 스윕](../assets/chart_clock_sweep.png)
+![클럭 스윕](assets/chart_clock_sweep.png)
 
 **FlashAttention 2 처리량** (BF16, causal) — 전 구간이 잠긴 상태 상한(≈71 TFLOPS) 상회:
 
-![FlashAttention](../assets/chart_attention.png)
+![FlashAttention](assets/chart_attention.png)
 
 원본 데이터는 `results/*.json`에 있으며, `python3 scripts/make_charts.py`로 그래프를 재생성할 수 있습니다.
 
