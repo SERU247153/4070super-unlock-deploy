@@ -30,6 +30,21 @@ else
 fi
 ok "소스 준비 완료"
 
+echo "== 1.5) Rocky 9(rpm 4.16) 호환 패치 =="
+# Rocky 9의 rpm 4.16은 2글자 매크로 이름을 거부한다(Macro %nv has illegal name).
+# gpu-unlock spec의 %nv 를 %nvv 로 치환 (working tree 기준 빌드이므로 유효)
+SPEC="$WORKDIR/packaging/rpm/gpu-unlock.spec"
+if command -v rpmspec >/dev/null 2>&1; then
+  if rpmspec -P "$SPEC" >/dev/null 2>&1; then
+    ok "spec 구문 정상 — 패치 불필요"
+  else
+    warn "rpm 4.16 매크로 이름 제한 감지 — %nv -> %nvv 치환"
+    sudo sed -i 's/%global nv /%global nvv /; s/%{nv}/%{nvv}/g' "$SPEC"
+    if rpmspec -P "$SPEC" >/dev/null 2>&1; then ok "패치 적용 완료"
+    else bad "패치 후에도 spec 파싱 실패 — 소스 상태 확인 필요"; fi
+  fi
+fi
+
 echo "== 2) 빌드/설치 (make install → install-rpm) =="
 echo "  (dnf install rpm-build → builddep → rpmbuild → dnf install 순서로 진행)"
 sudo make -C "$WORKDIR" install
