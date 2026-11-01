@@ -27,10 +27,11 @@ sudo nvidia-smi -pm 1 | sed 's/^/  /'
 
 echo "== 2) 전력 제한 =="
 POWER_INFO=$(nvidia-smi -q -d POWER)
-MIN_PL=$(echo "$POWER_INFO" | awk -F: '/Min Power Limit/{gsub(/[^0-9.]/,"",$2); print $2}')
-MAX_PL=$(echo "$POWER_INFO" | awk -F: '/Max Power Limit/{gsub(/[^0-9.]/,"",$2); print $2}')
-DEF_PL=$(echo "$POWER_INFO" | awk -F: '/Default Power Limit/{gsub(/[^0-9.]/,"",$2); print $2}')
-CUR_PL=$(echo "$POWER_INFO" | awk -F: '/Enforced Power Limit/{gsub(/[^0-9.]/,"",$2); print $2}')
+# 드라이버 버전마다 라벨/중복이 다르므로: 첫 번째 '숫자 유효값'만 채택 (N/A 제외)
+MIN_PL=$(echo "$POWER_INFO" | awk -F: '/Min Power Limit/{gsub(/[^0-9.]/,"",$2); if ($2 ~ /[0-9]/) {print $2; exit}}')
+MAX_PL=$(echo "$POWER_INFO" | awk -F: '/Max Power Limit/{gsub(/[^0-9.]/,"",$2); if ($2 ~ /[0-9]/) {print $2; exit}}')
+DEF_PL=$(echo "$POWER_INFO" | awk -F: '/Default Power Limit/{gsub(/[^0-9.]/,"",$2); if ($2 ~ /[0-9]/) {print $2; exit}}')
+CUR_PL=$(echo "$POWER_INFO" | awk -F: '/Current Power Limit/{gsub(/[^0-9.]/,"",$2); if ($2 ~ /[0-9]/) {print $2; exit}}')
 echo "  min=${MIN_PL}W / default=${DEF_PL}W / max=${MAX_PL}W / 현재=${CUR_PL}W"
 
 if [ -z "$MIN_PL" ] || [ -z "$MAX_PL" ] || [ -z "$DEF_PL" ]; then

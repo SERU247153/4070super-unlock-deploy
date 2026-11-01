@@ -36,11 +36,11 @@ echo "== 3) NVIDIA GPU / 드라이버 =="
 if command -v nvidia-smi >/dev/null 2>&1; then
   nvidia-smi --query-gpu=name,pci.device_id,driver_version --format=csv,noheader | sed 's/^/  /'
   DEVID=$(nvidia-smi --query-gpu=pci.device_id --format=csv,noheader | head -1 | tr -d '[:space:]')
-  if [ "$DEVID" = "0x2783" ]; then
-    ok "RTX 4070 SUPER (10de:2783) — gpu-unlock 지원 목록에 등록됨"
-  else
-    warn "장치 ID가 4070 SUPER(0x2783)와 다름: $DEVID — 지원 여부 재확인 필요"
-  fi
+  # 드라이버 610.x 는 device+vendor(0x278310DE)로 반환하므로 접두어 비교
+  case "$DEVID" in
+    0x2783*) ok "RTX 4070 SUPER (10de:2783) — gpu-unlock 지원 목록에 등록됨" ;;
+    *) warn "장치 ID가 4070 SUPER(0x2783)와 다름: $DEVID — 지원 여부 재확인 필요" ;;
+  esac
 else
   bad "nvidia-smi 없음 — NVIDIA 드라이버 설치가 선행되어야 함"
 fi

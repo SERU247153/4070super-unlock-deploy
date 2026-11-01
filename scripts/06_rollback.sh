@@ -47,7 +47,7 @@ else
 fi
 
 echo "== 3) GPU 튜닝 되돌리기 =="
-DEF_PL=$(nvidia-smi -q -d POWER 2>/dev/null | awk -F: '/Default Power Limit/{gsub(/[^0-9.]/,"",$2); print $2}')
+DEF_PL=$(nvidia-smi -q -d POWER 2>/dev/null | awk -F: '/Default Power Limit/{gsub(/[^0-9.]/,"",$2); if ($2 ~ /[0-9]/) {print $2; exit}}')
 if [ -n "${DEF_PL:-}" ]; then
   sudo nvidia-smi -pl "$DEF_PL" | sed 's/^/  /'
   ok "전력 제한 기본값(${DEF_PL}W) 복원"
