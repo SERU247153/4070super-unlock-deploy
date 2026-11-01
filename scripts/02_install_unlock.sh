@@ -45,6 +45,22 @@ if command -v rpmspec >/dev/null 2>&1; then
   fi
 fi
 
+echo "== 1.6) RHEL 9 aperture API 백포트 호환 패치 =="
+# RHEL 9.x 커널은 6.0의 aperture API(aperture_remove_conflicting_pci_devices)를
+# 5.14 커널에 백포트해뒀다. 상류 소스의 LINUX_VERSION_CODE >= 6.0 분기만으로는
+# 구형 API(remove_conflicting_pci_framebuffers)로 빠져 DKMS 빌드가 실패한다.
+# RHEL_RELEASE_CODE 매크로로 분기를 보강한다.
+UNLOCK_C="$WORKDIR/kernel/gpu_unlock/unlock_610.c"
+if [ -f "$UNLOCK_C" ]; then
+  if grep -q 'defined(RHEL_RELEASE_CODE) || LINUX_VERSION_CODE' "$UNLOCK_C"; then
+    ok "aperture 호환 패치 이미 적용됨"
+  else
+    sudo sed -i 's/#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0)/#if defined(RHEL_RELEASE_CODE) || LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0)/g' "$UNLOCK_C"
+    if grep -q 'defined(RHEL_RELEASE_CODE)' "$UNLOCK_C"; then ok "aperture 호환 패치 적용"
+    else bad "패치 실패 — 소스 상태 확인 필요"; fi
+  fi
+fi
+
 echo "== 2) 빌드/설치 (make install → install-rpm) =="
 echo "  (dnf install rpm-build → builddep → rpmbuild → dnf install 순서로 진행)"
 sudo make -C "$WORKDIR" install
