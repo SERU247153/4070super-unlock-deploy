@@ -1,0 +1,38 @@
+{
+  "label": "c2100_2100",
+  "gpu": "NVIDIA GeForce RTX 4070 SUPER",
+  "sm": 56,
+  "cuda": "12.5",
+  "torch": "2.4.0a0+3bcc3cddb5.nv24.07",
+  "size": 8192,
+  "iters": 7,
+  "calibration": {
+    "theoretical_fp32acc_tflops": 120.4224,
+    "reference": {
+      "dtype": "fp32_cuda",
+      "median_s": 0.04840129100011836,
+      "tflops": 22.71657646018804,
+      "clock_mhz": 2100.0,
+      "efficiency": 0.7545631530408974
+    },
+    "power": {
+      "samples": 2,
+      "avg_w": 61.47,
+      "max_w": 68.84
+    }
+  },
+  "results": {
+    "fp16": {
+      "median_s": 0.00946279599997979,
+      "tflops": 116.19310273394336,
+      "clock_mhz": 2100.0,
+      "efficiency": 0.964879480345379
+    },
+    "bf16": {
+      "median_s": 0.009803121999993891,
+      "tflops": 112.15933329980848,
+      "clock_mhz": 2100.0,
+      "efficiency": 0.9313826439251209
+    }
+  }
+}

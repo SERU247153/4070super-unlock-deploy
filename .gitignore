@@ -1,4 +1,7 @@
-results/
+results/*
+!results/*.json
+!results/calibration/
+!results/calibration/*.json
 __pycache__/
 *.pyc
 .DS_Store

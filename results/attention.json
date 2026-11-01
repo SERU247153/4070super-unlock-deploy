@@ -1,0 +1,85 @@
+{
+  "gpu": "NVIDIA GeForce RTX 4070 SUPER",
+  "results": [
+    {
+      "batch": 1,
+      "heads": 32,
+      "seqlen": 1024,
+      "headdim": 128,
+      "mode": "fwd",
+      "causal": true,
+      "median_s": 0.00011466600000176186,
+      "tflops": 149.82531163323068
+    },
+    {
+      "batch": 1,
+      "heads": 32,
+      "seqlen": 1024,
+      "headdim": 128,
+      "mode": "fwd+bwd",
+      "causal": true,
+      "median_s": 0.0006373779999648832,
+      "tflops": 80.86191797463925
+    },
+    {
+      "batch": 1,
+      "heads": 32,
+      "seqlen": 2048,
+      "headdim": 128,
+      "mode": "fwd",
+      "causal": true,
+      "median_s": 0.0003907440000148199,
+      "tflops": 175.86828392347329
+    },
+    {
+      "batch": 1,
+      "heads": 32,
+      "seqlen": 2048,
+      "headdim": 128,
+      "mode": "fwd+bwd",
+      "causal": true,
+      "median_s": 0.0018569100000149774,
+      "tflops": 111.02230598485505
+    },
+    {
+      "batch": 1,
+      "heads": 32,
+      "seqlen": 4096,
+      "headdim": 128,
+      "mode": "fwd",
+      "causal": true,
+      "median_s": 0.0012768400000027214,
+      "tflops": 215.27983689688148
+    },
+    {
+      "batch": 1,
+      "heads": 32,
+      "seqlen": 4096,
+      "headdim": 128,
+      "mode": "fwd+bwd",
+      "causal": true,
+      "median_s": 0.006029663999981949,
+      "tflops": 136.76279819811995
+    },
+    {
+      "batch": 2,
+      "heads": 32,
+      "seqlen": 2048,
+      "headdim": 128,
+      "mode": "fwd",
+      "causal": true,
+      "median_s": 0.0006924219999859815,
+      "tflops": 198.490159866068
+    },
+    {
+      "batch": 2,
+      "heads": 32,
+      "seqlen": 2048,
+      "headdim": 128,
+      "mode": "fwd+bwd",
+      "causal": true,
+      "median_s": 0.0037832319999893116,
+      "tflops": 108.98534914516607
+    }
+  ]
+}
