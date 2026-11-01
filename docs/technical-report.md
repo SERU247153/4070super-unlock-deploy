@@ -122,9 +122,33 @@ AD104 기반 RTX 4070 Ti(`10de:2782`)에서 BF16/FP16 +83~84%의 실측 보고�
 
 > **TFLOPS = 2·N³ / t · 10⁻¹²**  … (1)   (N=8192, t: 중앙값 실행 시간[초])
 
-반복 7회의 중앙값을 사용하여 이상치(outlier)와 초기 워밍업 영향을 배제한다. 언록 성공 판정 기준은 `after/before ≈ 2.0`이다(전력 스로틀링 고려 시 1.7 이상).
+반복 7회의 중앙값을 사용하여 이상치(outlier)와 초기 워밍업 영향을 배제한다.
 
-### 4.3 운영 환경 안전장치
+### 4.3 캘리브레이션(교정) 방법론
+
+전·후 비교의 내적 타당성을 확보하기 위해 IEEE TPDS 방법론 [7]과 NVIDIA 아키텍처 백서 [8][9]의 실측 상수에 근거한 3중 교정을 적용한다.
+
+**(a) 이론 피크 모델.** Ada 4세대 텐서코어는 SM당 4개, TC당 FP16 256 FMA/clk를 수행한다 [8]. Sun et al. [7]의 실측에 따르면 FP32 누적 경로는 FP16 누적의 절반인 SM당 512 FMA/clk, FP16 누적 경로는 1024 FMA/clk이다. 따라서 실측 SM 클럭 f로부터 이론 피크를 식 (2)·(3)과 같이 도출하고, 측정값과의 비(효율)를 산출한다.
+
+> **P_fp32acc = N_SM × 512 × 2 × f**  … (2)
+> **P_fp16acc = N_SM × 1024 × 2 × f**  … (3)
+
+RTX 4070 SUPER(56 SM, f=2.475 GHz)의 경우 P_fp32acc ≈ 142 TFLOPS이며, 언록 전에는 이 값의 절반(≈71 TFLOPS)으로 잠겨 있다.
+
+**(b) 참조 경로(reference path).** FP16·FP16 누적 GEMM은 언록과 무관하게 항상 풀속으로 동작하므로, 기기의 실질 천장(클럭·전력·발열 조건의 총합)을 나타낸다. 언록 전·후 두 실행에서 참조 경로 처리량이 **±10% 이내로 유지**되어야 두 실행의 측정 조건이 동등하다고 판정한다.
+
+**(c) 조건 통제.** `BENCH_LOCK_CLOCKS`로 SM 클럭을 고정하여 부스트 클럭 변동을 제거하고, 실행 중 전력 소비를 1초 간격으로 샘플링하여 평균·최대를 결과에 기록한다. 이는 Sun et al. [7]이 제시한 클럭 고정 기반 마이크로벤치마크 관행을 따른다.
+
+**판정 규칙**은 다음과 같다.
+
+| 조건 | 판정 |
+|---|---|
+| 제한 경로 gain ≥ 1.7 ∧ 참조 경로 비율 ∈ [0.9, 1.1] | ✅ 언록 성공 (측정 유효) |
+| 제한 경로 gain ≥ 1.7 ∧ 참조 경로 변동 | ⚠️ 조건 상이 — 재측정 권장 |
+| gain ≤ 1.15 | ❌ 미적용 |
+| 1.15 < gain < 1.7 | 🔶 부분 적용 (전력 스로틀링 등) |
+
+### 4.4 운영 환경 안전장치
 
 | 위험 | 대응 |
 |---|---|
@@ -147,9 +171,11 @@ AD104 기반 RTX 4070 Ti(`10de:2782`)에서 BF16/FP16 +83~84%의 실측 보고�
 
 ### 5.2 평가 지표
 
-1. **GEMM 처리량**: 식 (1)의 TFLOPS, 전·후 비율
-2. **언록 로그**: 부팅 저널 내 `gpu_unlock: unlocked` 기록 존재 여부
-3. **드라이버 바인딩 정상성**: 언록 후 `nvidia` 정상 바인딩(`lspci -nnk`)
+1. **GEMM 처리량**: 식 (1)의 TFLOPS, 전·후 비율(gain)
+2. **효율**: 식 (2) 이론 피크 대비 측정 비율 (캘리브레이션 a)
+3. **참조 경로 안정성**: FP16 누적 경로의 전·후 비율 ∈ [0.9, 1.1] (캘리브레이션 b)
+4. **언록 로그**: 부팅 저널 내 `gpu_unlock: unlocked` 기록 존재 여부
+5. **드라이버 바인딩 정상성**: 언록 후 `nvidia` 정상 바인딩(`lspci -nnk`)
 
 ### 5.3 기대 성능
 
@@ -190,3 +216,9 @@ AD104 기반 RTX 4070 Ti(`10de:2782`)에서 BF16/FP16 +83~84%의 실측 보고�
 [5] JustAResearcher, *gpu-unlock-ada*, GitHub 포크, 2026. (AD104 `2783` RTX 4070 SUPER 매칭 리포트 포함)
 
 [6] impacifist, *Windows-GPU-UNLOCK*, GitHub 저장소, 2026. (Windows 포트, 본 연구 범위 밖)
+
+[7] W. Sun, A. Li, T. Geng, S. Stuijk, and H. Corporaal, "Dissecting Tensor Cores via Microbenchmarks: Latency, Throughput and Numeric Behaviors," *IEEE Transactions on Parallel and Distributed Systems*, vol. 34, no. 1, pp. 246–261, 2023. doi:10.1109/TPDS.2022.3217824 (FP16·FP32 누적 512 FMA/clk/SM, FP16 누적 1024 FMA/clk/SM 실측)
+
+[8] NVIDIA, *NVIDIA Ada GPU Architecture* (whitepaper V2.02), 2023. (4세대 텐서코어 4개/SM, TC당 FP16 256 FMA/clk)
+
+[9] NVIDIA, *NVIDIA A100 Tensor Core GPU Architecture* (whitepaper), 2020. (3세대 텐서코어 TC당 FP16 256 FMA/clk, SM당 1024 FMA/clk — Ada와 동일 규격의 근거)

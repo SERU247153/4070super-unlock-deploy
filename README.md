@@ -101,6 +101,18 @@ cd /opt/gpu-unlock-deploy
 | `CLOCK_LOCK` | `off` | `"2100,2730"` 형식으로 클럭 범위 고정 |
 | `ENABLE_STREAM_MEM_OPS` | `1` | `NVreg_EnableStreamMemOPs=1` 등록 |
 | `BENCH_MATRIX_SIZE` | `8192` | VRAM 부족 시 `6144` 로 낮춤 |
+| `BENCH_LOCK_CLOCKS` | `off` | 벤치마크 중 클럭 고정 — 전/후 조건 통일용, `"2205,2205"` 권장 |
+| `BENCH_POWER_SAMPLE` | `1` | 실행 중 전력 샘플링 (평균/최대 기록) |
+
+## 🔬 캘리브레이션 (IEEE TPDS 방법론)
+
+벤치마크는 단순 전·후 비교가 아니라 **3중 교정**으로 검증합니다 (상세: [기술 보고서 4.3절](docs/technical-report.md)):
+
+1. **이론 피크 모델** — 실측 SM 클럭으로 이론 처리량을 계산해 효율(%) 산출 (Sun et al., IEEE TPDS 2023 [7] 상수 기반)
+2. **참조 경로** — FP16·FP16 누적 GEMM은 언록과 무관하게 풀속 → 전/후 실행 조건이 동등한지(±10%) 판정
+3. **조건 통제** — 클럭 고정(`BENCH_LOCK_CLOCKS`) + 전력 샘플링
+
+판정: 제한 경로 **~2배** + 참조 경로 **안정** → ✅ 언록 성공 (측정 유효)
 
 ## ⚠️ 주의사항
 

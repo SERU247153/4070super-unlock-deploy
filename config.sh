@@ -32,3 +32,11 @@ ENABLE_STREAM_MEM_OPS=1
 BENCH_IMAGE="pytorch/pytorch:2.3.1-cuda12.1-cudnn8-runtime"
 BENCH_MATRIX_SIZE=8192   # 8192^3 GEMM, 12GB VRAM 기준 안전
 BENCH_ITERS=7            # 측정 반복 횟수 (중앙값 사용)
+
+# ---- 벤치마크 캘리브레이션 ----
+# 클럭 고정: 전/후 실행 조건을 동일하게 만드는 핵심 (IEEE TPDS 방법론 [7])
+#   "off"         : 미고정 (부스트 변동 허용 — 가능하면 고정 권장)
+#   "2205,2205"   : min,max MHz 고정 (카드 부스트 범위 내 안정적인 값 선택)
+BENCH_LOCK_CLOCKS="off"
+# 실행 중 전력 샘플링 (1초 간격, 평균/최대를 결과 JSON에 기록)
+BENCH_POWER_SAMPLE=1
