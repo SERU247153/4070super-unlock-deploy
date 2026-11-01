@@ -41,12 +41,15 @@ NVIDIA는 GeForce 카드의 **FP16 / BF16 / TF32 텐서 연산을 의도적으�
 ├── README.md
 └── scripts/
     ├── 01_preflight.sh        # 사전 점검 (+ --fix 로 패키지 자동 설치)
-    ├── 02_install_unlock.sh   # 빌드·설치 + 부트 옵션 등록
+    ├── 02_install_unlock.sh   # 빌드·설치 + 부트 옵션 등록 (RHEL 호환 패치 내장)
     ├── 03_tune.sh             # 전력 상향·클럭 고정·드라이버 옵션
-    ├── 04_benchmark.sh        # FP16/BF16 처리량 전/후 측정 (도커)
-    ├── bench.py               # 벤치마크 코드 (잠긴 경로 정밀 측정)
-    ├── 05_verify.sh           # 언록 적용 확인
-    └── 06_rollback.sh         # 원상복구
+    ├── 04_benchmark.sh        # FP16/BF16 처리량 전/후 측정 + 캘리브레이션 (도커)
+    ├── bench.py               # GEMM 벤치마크 코드 (이론 피크·참조 경로 포함)
+    ├── 05_verify.sh           # 언록 적용 확인 (nvidia-smi 통신까지)
+    ├── 06_rollback.sh         # 원상복구
+    ├── 07_attention_bench.sh  # FlashAttention 실워크로드 성능 측정
+    ├── 08_install_watchdog.sh # 언록 실패 자동 복구 워치독 설치
+    └── 09_safe_reboot.sh      # 유지보수용 안전 웜 재부팅
 ```
 
 ## 🔁 배포 흐름

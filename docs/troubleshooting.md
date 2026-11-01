@@ -69,3 +69,34 @@
 
 - `05_verify.sh` 는 **nvidia-smi 통신까지 확인**해야 한다 (단순히 `lspci` 바인딩만 보면 오판).
 - 로그에 `gpu_unlock: unlocked` 문구가 있어야 성공. `stage=host ss0=0x88888888` 이후 `failure ...` 가 나오면 셀렉터 기록 후 FLR 단계에서 실패한 것.
+
+---
+
+## 4. 원격 운영 (물리 접근 없이) — 웜 부팅 문제 보완
+
+언록 적용 중에는 웜 재부팅이 위험하고, 재언록에는 콜드 파워 사이클이 필요하다.
+물리 접근이 어려운 환경(원격 서버)을 위한 3겹 보완책:
+
+### 4-A. 자동 복구 워치독 (설치됨, `08_install_watchdog.sh`)
+
+- 부팅 후 `nvidia-smi` 통신 불가 + 부팅 로그에 `gpu_unlock: unlock failed` 감지 시
+- 부트 옵션 자동 제거 → 1회 자동 재부팅으로 GPU 복구 (플래그 파일로 루프 방지)
+- 효과: 실수로 웜 재부팅해도 **무인 자가치유** — GPU만 잠긴 상태로 복구됨
+- 로그: `/var/log/gpu-unlock-watchdog.log`, 플래그: `/var/lib/gpu-unlock/watchdog-recovered`
+- 상태 확인: `systemctl status gpu-unlock-watchdog`
+
+### 4-B. 스마트 플러그 + BIOS AC 복구 (근본 해결, ⭐ 권장)
+
+데스크톱 서버(B650M 등)라면 WiFi 스마트 플러그로 원격 콜드 사이클이 가능하다:
+
+1. BIOS: **Settings → Platform Power → AC BACK → Always On**
+   (전원 복구 시 자동 부팅. Gigabyte B650M 기준, 보드별 명칭은 AC Power Loss/Restore 등)
+2. 서버 전원 코드를 **WiFi 스마트 플러그**에 연결
+3. 이후 모든 재부팅을 스마트 플러그 OFF → 30초 → ON 으로 수행 = **항상 콜드 부팅**
+4. 부수 효과: 정전 → 복전도 콜드 사이클이므로 언록이 자동으로 다시 적용됨 (정전은 위험이 아니라 기회)
+
+### 4-C. 안전 웜 재부팅 헬퍼 (`09_safe_reboot.sh`)
+
+- 스마트 플러그가 아직 없다면, 원격 유지보수(커널 업데이트 등) 재부팅 시 이 스크립트 사용
+- 부트 옵션 제거 → 웜 재부팅 → GPU는 잠긴 상태로 정상 동작
+- 재언록: 부트 옵션 재등록 후 콜드 파워 사이클 (대전 방문 시, 또는 스마트 플러그로)
