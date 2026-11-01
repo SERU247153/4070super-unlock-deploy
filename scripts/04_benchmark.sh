@@ -159,7 +159,7 @@ ref_a = a.get("calibration", {}).get("reference", {}).get("tflops", 0)
 if ref_b and ref_a:
     ref_ratio = ref_a / ref_b
     stable = 0.9 <= ref_ratio <= 1.1
-    print(f"  참조 경로(fp16_acc, 언록 무관): {ref_b:.1f}T -> {ref_a:.1f}T "
+    print(f"  참조 경로(int8, 언록 무관): {ref_b:.1f}T -> {ref_a:.1f}T "
           f"(비율 {ref_ratio:.2f}) — {'안정 ✓' if stable else '변동 ⚠'}")
 else:
     stable = True
