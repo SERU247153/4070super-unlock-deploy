@@ -22,14 +22,14 @@
 | 경로 | 측정값 | 비고 |
 |---|---|---|
 | fp16 · FP32 누적 | **70.3 TFLOPS** | 잠김 상태 |
-| bf16 · FP32 누적 | **69.1 TFLOPS** | 잠긴 이론치(71.8@2505MHz)의 96% |
+| bf16 · FP32 누적 | **69.1 TFLOPS** | 2505 MHz 기준 잠긴 상태 이론치(71.8)의 96% |
 | fp32(CUDA 코어) 참조 | 22.8 TFLOPS | 이론 29.7의 76.7% |
 
-## 설치 과정에서 발견·해결된 이슈 2건
+## 설치 과정에서 해결한 이슈
 
-1. **rpm 4.16 매크로 제한** — `%global nv` 거부 → `%nvv` 자동 치환 패치 (02 스크립트 1.5절)
-2. **RHEL 9.8 aperture 백포트** — 6.0 API가 5.14에 백포트됨 → `RHEL_RELEASE_CODE` 분기 보강 패치 (02 스크립트 1.6절)
-3. (부수) /boot 공간 부족 — installonly_limit=2 로 커널 정리
+1. **rpm 4.16 매크로 제한** — `%global nv`를 거부해서 `%nvv`로 치환하는 패치를 넣음 (02 스크립트 1.5절)
+2. **RHEL 9.8 aperture 백포트** — 6.0 API가 5.14에 백포트되어 있음 → `RHEL_RELEASE_CODE` 분기 보강 (02 스크립트 1.6절)
+3. **/boot 공간 부족** — `installonly_limit=2`로 오래된 커널 정리
 
 ## 1차 언록 시도 → 실패 (논콜드 카드)
 
@@ -91,7 +91,7 @@ grubby --update-kernel=ALL --remove-args="gpu_unlock.targets=all" → systemctl 
 
 | 구간 | 속도 | 언록 영향 |
 |---|---|---|
-| 프리필 (611 tok) | 2,677 tok/s | 일부 (양자화라 제한적) |
+| 프리필 (611 tok) | 2,677 tok/s | 일부 (양자화 모델이라 제한적) |
 | 디코드 (64 tok) | 75.8 tok/s | 없음 (메모리 대역폭 병목, 예상대로) |
 
 ## 캘리브레이션: 전력·클럭·성능 특성
@@ -121,6 +121,26 @@ grubby --update-kernel=ALL --remove-args="gpu_unlock.targets=all" → systemctl 
 
 - 풀부하 지속 클럭은 **~2400 MHz에서 포화** (2505/2700 요청 모두 ~2400 수렴)
 - 효율 93~97%로 이론 피크 모델 검증 — 캘리브레이션 방법론의 타당성 확인
+
+## 실측 그래프
+
+원본 데이터는 `results/*.json`, 그래프는 `scripts/make_charts.py`로 재생성할 수 있다.
+
+### 언록 전/후 GEMM 처리량
+
+![chart_unlock](../assets/chart_unlock.png)
+
+### 전력 제한별 처리량 (180W 스위트 스팟)
+
+![chart_power_sweep](../assets/chart_power_sweep.png)
+
+### 클럭별 처리량·효율 (~2400 MHz 포화)
+
+![chart_clock_sweep](../assets/chart_clock_sweep.png)
+
+### FlashAttention 2 처리량 (전 구간 잠긴 상한 초과)
+
+![chart_attention](../assets/chart_attention.png)
 
 ## 교훈
 

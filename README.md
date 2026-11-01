@@ -19,7 +19,7 @@
 
 ## 🚀 무엇을 하는 키트인가요?
 
-NVIDIA는 GeForce 카드의 **FP16 / BF16 / TF32 텐서 연산을 의도적으로 반속**으로 잠가둡니다.
+NVIDIA는 GeForce 카드의 **FP16 / BF16 / TF32 텐서 연산을 의도적으로 반속**으로 잠가 둡니다.
 이 키트는 [gpu-unlock](https://github.com/Zagitta/gpu-unlock) 을 주피터 노트북 서버(Rocky 9)에 안전하게 적용합니다.
 
 > **핵심 포인트** — 언록은 GPU 칩 레지스터 단위로 걸리므로, 호스트는 물론 **모든 도커 컨테이너의 PyTorch 워크로드에 자동 적용**됩니다.
@@ -27,7 +27,7 @@ NVIDIA는 GeForce 카드의 **FP16 / BF16 / TF32 텐서 연산을 의도적으�
 
 | 워크로드 | 기대 효과 |
 |---|---|
-| ⚡ FP16/BF16 GEMM (FP32 축적) | **~2배** (~70 → ~130–145 TFLOPS) |
+| ⚡ FP16/BF16 GEMM (FP32 누적) | **~2배** (실측: 69.1 → 132.9 TFLOPS) |
 | 🧠 LLM 프리필 / 프롬프트 처리 | +25~55% |
 | 🖼️ 이미지 생성 (FP16/BF16) | +30~55% |
 | 🪙 양자화 모델 (INT8/INT4/GGUF) | 거의 없음 |
@@ -48,8 +48,11 @@ NVIDIA는 GeForce 카드의 **FP16 / BF16 / TF32 텐서 연산을 의도적으�
     ├── 05_verify.sh           # 언록 적용 확인 (nvidia-smi 통신까지)
     ├── 06_rollback.sh         # 원상복구
     ├── 07_attention_bench.sh  # FlashAttention 실워크로드 성능 측정
+    ├── bench_attention.py     # 어텐션 벤치마크 코드
     ├── 08_install_watchdog.sh # 언록 실패 자동 복구 워치독 설치
-    └── 09_safe_reboot.sh      # 유지보수용 안전 웜 재부팅
+    ├── 09_safe_reboot.sh      # 유지보수용 안전 웜 재부팅
+    ├── 10_calibrate.sh        # 전력·클럭 스윕 캘리브레이션
+    └── make_charts.py         # 실측 데이터 그래프 생성
 ```
 
 ## 🔁 배포 흐름
@@ -85,15 +88,17 @@ cd /opt/gpu-unlock-deploy
 
 | # | 명령 | 시점 |
 |---|---|---|
-| 1️⃣ | `sudo bash scripts/01_preflight.sh --fix` | 재부팅 전 |
-| 2️⃣ | `sudo bash scripts/04_benchmark.sh before` | 재부팅 전 |
-| 3️⃣ | `sudo bash scripts/02_install_unlock.sh` | 재부팅 전 |
-| 4️⃣ | `sudo bash scripts/03_tune.sh` | 재부팅 전 |
-| 5️⃣ | `sudo reboot` | ⭐ **언록 적용** |
-| 6️⃣ | `sudo bash scripts/05_verify.sh` | 재부팅 후 |
-| 7️⃣ | `sudo bash scripts/04_benchmark.sh after` | 재부팅 후 |
+| 1️⃣ | `sudo bash scripts/01_preflight.sh --fix` | 콜드 부팅 전 |
+| 2️⃣ | `sudo bash scripts/04_benchmark.sh before` | 콜드 부팅 전 |
+| 3️⃣ | `sudo bash scripts/02_install_unlock.sh` | 콜드 부팅 전 |
+| 4️⃣ | `sudo bash scripts/03_tune.sh` | 콜드 부팅 전 |
+| 5️⃣ | **전원 완전 차단 30초+ → 재가동** (콜드 부팅) | ⭐ **언록 적용** |
+| 6️⃣ | `sudo bash scripts/05_verify.sh` | 부팅 후 |
+| 7️⃣ | `sudo bash scripts/04_benchmark.sh after` | 부팅 후 |
 
-> 3️⃣→4️⃣→5️⃣ 를 이어서 실행하면 **재부팅 1회**로 언록 + 드라이버 옵션이 함께 적용됩니다.
+> ⚠️ 5️⃣에서 `sudo reboot`(웜 재부팅)을 쓰면 안 됩니다. 언록은 **완전 콜드 상태**에서만
+> 성공하며, 웜 재부팅으로 시도하면 `-110` 실패로 GPU가 멈출 수 있습니다.
+> (전원을 끊지 못하는 원격 환경이라면 [트러블슈팅 4절](docs/troubleshooting.md) 참고)
 
 ## ⚙️ 설정 (`config.sh`)
 
@@ -105,7 +110,7 @@ cd /opt/gpu-unlock-deploy
 | `ENABLE_STREAM_MEM_OPS` | `1` | `NVreg_EnableStreamMemOPs=1` 등록 |
 | `BENCH_MATRIX_SIZE` | `8192` | VRAM 부족 시 `6144` 로 낮춤 |
 | `BENCH_CONTAINER` | `jupyter_ai` | `""`=새 컨테이너 실행 / 기존 컨테이너 재사용 |
-| `BENCH_LOCK_CLOCKS` | `off` | 벤치마크 중 클럭 고정 — 전/후 조건 통일용, `"2205,2205"` 권장 |
+| `BENCH_LOCK_CLOCKS` | `2505,2505` | 벤치마크 중 클럭 고정 — 전/후 조건 통일용 (카드 부스트 범위 내에서 지정) |
 | `BENCH_POWER_SAMPLE` | `1` | 실행 중 전력 샘플링 (평균/최대 기록) |
 
 ## 🔬 캘리브레이션 (IEEE TPDS 방법론)
