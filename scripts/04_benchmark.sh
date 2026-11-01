@@ -58,7 +58,11 @@ trap unlock_clocks EXIT
 
 echo "== 벤치마크 ($PHASE) =="
 echo "  GPU    : $(nvidia-smi --query-gpu=name --format=csv,noheader | head -1)"
-echo "  이미지 : $BENCH_IMAGE (없으면 최초 1회 pull — 시간 소요)"
+if [ -n "${BENCH_CONTAINER:-}" ]; then
+  echo "  실행   : 기존 컨테이너 '$BENCH_CONTAINER' (docker exec)"
+else
+  echo "  이미지 : $BENCH_IMAGE (없으면 최초 1회 pull — 시간 소요)"
+fi
 lock_clocks
 echo
 
@@ -74,17 +78,32 @@ fi
 
 # ---- 실행 ----
 set +e
-docker run --rm --gpus all \
-  -e "CUBLAS_WORKSPACE_CONFIG=:4096:8" \
-  -v "$SCRIPT_DIR/bench.py:/tmp/bench.py:ro,Z" \
-  -v "$RESULTS_DIR:/results:Z" \
-  "$BENCH_IMAGE" \
-  python /tmp/bench.py \
+if [ -n "${BENCH_CONTAINER:-}" ]; then
+  # 기존 컨테이너 재사용 모드 (이미지 pull 불필요 — NGC PyTorch 등 서버 내장 환경)
+  docker cp "$SCRIPT_DIR/bench.py" "$BENCH_CONTAINER:/tmp/bench.py"
+  docker exec "$BENCH_CONTAINER" python /tmp/bench.py \
     --label "$PHASE" \
     --size "$BENCH_MATRIX_SIZE" \
     --iters "$BENCH_ITERS" \
-    --out "/results/${PHASE}.json"
-DOCKER_RC=$?
+    --out /tmp/bench_result.json
+  DOCKER_RC=$?
+  if [ "$DOCKER_RC" = "0" ]; then
+    docker cp "$BENCH_CONTAINER:/tmp/bench_result.json" "$OUT_JSON"
+    printf "${G}결과를 컨테이너에서 추출: %s${N}\n" "$OUT_JSON"
+  fi
+else
+  docker run --rm --gpus all \
+    -e "CUBLAS_WORKSPACE_CONFIG=:4096:8" \
+    -v "$SCRIPT_DIR/bench.py:/tmp/bench.py:ro,Z" \
+    -v "$RESULTS_DIR:/results:Z" \
+    "$BENCH_IMAGE" \
+    python /tmp/bench.py \
+      --label "$PHASE" \
+      --size "$BENCH_MATRIX_SIZE" \
+      --iters "$BENCH_ITERS" \
+      --out "/results/${PHASE}.json"
+  DOCKER_RC=$?
+fi
 set -e
 
 if [ "$BENCH_POWER_SAMPLE" = "1" ]; then

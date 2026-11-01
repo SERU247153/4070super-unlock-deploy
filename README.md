@@ -101,6 +101,7 @@ cd /opt/gpu-unlock-deploy
 | `CLOCK_LOCK` | `off` | `"2100,2730"` 형식으로 클럭 범위 고정 |
 | `ENABLE_STREAM_MEM_OPS` | `1` | `NVreg_EnableStreamMemOPs=1` 등록 |
 | `BENCH_MATRIX_SIZE` | `8192` | VRAM 부족 시 `6144` 로 낮춤 |
+| `BENCH_CONTAINER` | `jupyter_ai` | `""`=새 컨테이너 실행 / 기존 컨테이너 재사용 |
 | `BENCH_LOCK_CLOCKS` | `off` | 벤치마크 중 클럭 고정 — 전/후 조건 통일용, `"2205,2205"` 권장 |
 | `BENCH_POWER_SAMPLE` | `1` | 실행 중 전력 샘플링 (평균/최대 기록) |
 

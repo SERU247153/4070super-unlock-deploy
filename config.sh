@@ -30,6 +30,10 @@ ENABLE_STREAM_MEM_OPS=1
 # ---- 벤치마크 ----
 # nvidia-container-toolkit 필요. 이미지가 없으면 최초 1회 pull 합니다.
 BENCH_IMAGE="pytorch/pytorch:2.3.1-cuda12.1-cudnn8-runtime"
+# 벤치마크 실행 위치:
+#   ""            : BENCH_IMAGE 로 새 컨테이너 실행 (pull 필요)
+#   "jupyter_ai"  : 기존 컨테이너 재사용 (NGC PyTorch + FlashAttention 내장, pull 불필요)
+BENCH_CONTAINER="jupyter_ai"
 BENCH_MATRIX_SIZE=8192   # 8192^3 GEMM, 12GB VRAM 기준 안전
 BENCH_ITERS=7            # 측정 반복 횟수 (중앙값 사용)
 
