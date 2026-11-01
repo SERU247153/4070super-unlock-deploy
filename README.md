@@ -117,6 +117,7 @@ cd /opt/gpu-unlock-deploy
 
 ## ⚠️ 주의사항
 
+- 🔴 **언록 적용 전 반드시 완전 파워 사이클(전원 차단 30초+) 후 부팅** — 웜 재부팅만으로 시도하면 `-110` 실패로 GPU가 멈출 수 있음 (실전 확인, [트러블슈팅](docs/troubleshooting.md) 2-A). 실패 시 복구법은 부트 옵션 제거 → 재부팅.
 - **첫 재부팅**은 반드시 콘솔 접근 가능한 상태에서 — 원격 서버는 보수적으로 진행
 - **Secure Boot** ON 상태면 미서명 DKMS 모듈이 조용히 무시됨 (01 스크립트가 걸러냄)
 - 전원 차단/재부팅 시 언록은 리셋되지만 **부팅 때 자동 재적용**
@@ -135,6 +136,8 @@ sudo reboot
 
 ## 🔗 참고
 
-- 📄 [기술 보고서 (논문 스타일)](docs/technical-report.md) — 설계·구현·실험 방법론
+- 📄 [기술 보고서 (논문 스타일)](docs/technical-report.md) — 설계·구현·실험 방법론 + 실측 데이터
+- 🛠️ [트러블슈팅 가이드](docs/troubleshooting.md) — 실전 실패 3종과 검증된 복구 절차
+- 📓 [실전 배포 일지](docs/deployment-log.md) — 대상 서버 배포 기록
 - [Zagitta/gpu-unlock](https://github.com/Zagitta/gpu-unlock) — 원본 프로젝트 (⭐ 13.9k)
 - RTX 40 세대(Ada)는 **Experimental** 단계 — 본 키트의 04/05 스크립트로 적용 여부를 즉시 확인 가능
