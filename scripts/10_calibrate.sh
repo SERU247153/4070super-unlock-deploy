@@ -16,7 +16,7 @@ DEPLOY_DIR="$(dirname "$SCRIPT_DIR")"
 # shellcheck source=../config.sh
 source "$DEPLOY_DIR/config.sh"
 
-G='\033[0;32m'; Y='\033[1;33m'; N='\033[0m'
+Y='\033[1;33m'; N='\033[0m'
 
 POWER_SWEEP="${POWER_SWEEP:-245 220 200 180 160}"
 CLOCK_SWEEP="${CLOCK_SWEEP:-2100,2100 2300,2300 2505,2505 2700,2700}"
@@ -46,8 +46,8 @@ sudo nvidia-smi -pm 1 >/dev/null 2>&1 || true
 sudo nvidia-smi -pl "$(max_power)" >/dev/null 2>&1 || true
 sudo nvidia-smi -rgc >/dev/null 2>&1 || true
 
-run_case() { # $1=label $2=출력 json 경로
-  local label=$1 out=$2
+run_case() { # $1=label $2=출력 json 경로 [$3=discard(1이면 저장 안 함)]
+  local label=$1 out=$2 discard=${3:-0}
   local plog
   plog=$(mktemp)
   ( while true; do
@@ -56,13 +56,20 @@ run_case() { # $1=label $2=출력 json 경로
     done ) &
   local spid=$!
   docker cp "$SCRIPT_DIR/bench.py" "$BENCH_CONTAINER:/tmp/bench.py" >/dev/null
-  docker exec "$BENCH_CONTAINER" python /tmp/bench.py \
-    --label "$label" --size "$BENCH_MATRIX_SIZE" --iters "$BENCH_ITERS" \
-    --out /tmp/calres.json >/dev/null
-  docker cp "$BENCH_CONTAINER:/tmp/calres.json" "$out" >/dev/null
+  if [ "$discard" = "1" ]; then
+    docker exec "$BENCH_CONTAINER" python /tmp/bench.py \
+      --label "discard_$label" --size "$BENCH_MATRIX_SIZE" --iters 3 \
+      --out /tmp/caldiscard.json >/dev/null
+  else
+    docker exec "$BENCH_CONTAINER" python /tmp/bench.py \
+      --label "$label" --size "$BENCH_MATRIX_SIZE" --iters "$BENCH_ITERS" \
+      --out /tmp/calres.json >/dev/null
+    docker cp "$BENCH_CONTAINER:/tmp/calres.json" "$out" >/dev/null
+  fi
   kill "$spid" 2>/dev/null || true
   wait "$spid" 2>/dev/null || true
-  python3 - "$out" "$plog" <<'PYEOF'
+  if [ "$discard" = "0" ]; then
+    python3 - "$out" "$plog" <<'PYEOF'
 import json, sys
 out, plog = sys.argv[1], sys.argv[2]
 try:
@@ -78,17 +85,17 @@ if vals:
     }
 json.dump(data, open(out, "w", encoding="utf-8"), indent=2)
 PYEOF
+  fi
   rm -f "$plog"
 }
 
-echo "== A. 전력 스윕 (클럭 ${BENCH_LOCK_CLOCKS} MHz 고정) =="
-sudo nvidia-smi -lgc "$BENCH_LOCK_CLOCKS" >/dev/null 2>&1 \
-  && printf "${G}클럭 고정 적용: %s${N}\n" "$BENCH_LOCK_CLOCKS" \
-  || printf "${Y}클럭 고정 실패 — 부스트 상태로 진행${N}\n"
+echo "== A. 전력 스윕 (자연 부스트 — 실운영 조건) =="
 for P in $POWER_SWEEP; do
-  echo "  전력 제한 ${P}W 측정 중..."
+  echo "  전력 제한 ${P}W 측정 중... (안정화 대기 포함)"
   sudo nvidia-smi -pl "$P" >/dev/null 2>&1 || { echo "  전력 설정 실패(${P}W) — 스킵"; continue; }
-  run_case "p${P}" "$CAL_DIR/p${P}.json"
+  sleep 5                                   # 전력 관리기 안정화
+  run_case "p${P}" "$CAL_DIR/p${P}.json" 1   # 폐기 측정 (워밍업)
+  run_case "p${P}" "$CAL_DIR/p${P}.json"     # 본 측정
 done
 
 echo "== B. 클럭 스윕 (전력 $(max_power)W 고정) =="
@@ -96,8 +103,10 @@ MAX_PL=$(max_power)
 sudo nvidia-smi -pl "$MAX_PL" >/dev/null 2>&1
 for LC in $CLOCK_SWEEP; do
   NAME="c${LC/,/_}"
-  echo "  클럭 ${LC} MHz 측정 중..."
+  echo "  클럭 ${LC} MHz 측정 중... (안정화 대기 포함)"
   if sudo nvidia-smi -lgc "$LC" >/dev/null 2>&1; then
+    sleep 5
+    run_case "$NAME" "$CAL_DIR/$NAME.json" 1
     run_case "$NAME" "$CAL_DIR/$NAME.json"
   else
     printf "${Y}  클럭 고정 실패(%s) — 스킵${N}\n" "$LC"
@@ -117,18 +126,19 @@ def load(p):
 
 p_files = sorted(glob.glob(f"{d}/p*.json"),
                  key=lambda p: int(os.path.basename(p)[1:-5]))
-print("\n[전력 스윕] 클럭 고정 상태의 전력 제한별 처리량")
-print(f"{'전력제한':>8} {'BF16 TFLOPS':>12} {'FP16 TFLOPS':>12} {'평균W':>7} {'최대W':>7} {'TFLOPS/W(BF16)':>15}")
+print("\n[전력 스윕] 자연 부스트 상태의 전력 제한별 처리량")
+print(f"{'전력제한':>8} {'실측클럭':>8} {'BF16 TFLOPS':>12} {'FP16 TFLOPS':>12} {'평균W':>7} {'최대W':>7} {'TFLOPS/W(BF16)':>15}")
 best_w = (None, 0)
 for p in p_files:
     j = load(p)
     pl = int(os.path.basename(p)[1:-5])
     bf = j["results"]["bf16"]["tflops"]
     fp = j["results"]["fp16"]["tflops"]
+    clk = j["results"]["bf16"].get("clock_mhz", 0)
     pw = j.get("calibration", {}).get("power", {})
     avg = pw.get("avg_w", 0); mx = pw.get("max_w", 0)
     eff = bf / avg if avg else 0
-    print(f"{pl:>7}W {bf:>11.1f} {fp:>11.1f} {avg:>6.1f} {mx:>6.1f} {eff:>14.2f}")
+    print(f"{pl:>7}W {clk:>7.0f} {bf:>11.1f} {fp:>11.1f} {avg:>6.1f} {mx:>6.1f} {eff:>14.2f}")
     if avg and (best_w[0] is None or eff > best_w[1]):
         best_w = (pl, eff)
 
