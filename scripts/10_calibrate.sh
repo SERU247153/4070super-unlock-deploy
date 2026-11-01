@@ -29,7 +29,9 @@ docker ps --filter "name=^/${BENCH_CONTAINER}$" --format '{{.Names}}' | grep -q 
   || { echo "컨테이너 '$BENCH_CONTAINER' 없음" >&2; exit 1; }
 
 max_power() {
-  nvidia-smi -q -d POWER | awk -F: '/Max Power Limit/{gsub(/[^0-9.]/,"",$2); if ($2 ~ /[0-9]/) {print $2; exit}}'
+  # 주의: awk에서 early-exit하면 nvidia-smi가 SIGPIPE로 죽어 pipefail+set -e에 걸린다.
+  # 전체 입력을 읽고 첫 유효값만 출력한다.
+  nvidia-smi -q -d POWER | awk -F: '/Max Power Limit/{gsub(/[^0-9.]/,"",$2); if ($2 ~ /[0-9]/ && !found) {print $2; found=1}}'
 }
 restore_state() {
   TARGET="$POWER_LIMIT_MODE"
