@@ -52,7 +52,11 @@ else
 fi
 
 echo "== 4) GPU 상태 =="
-nvidia-smi --query-gpu=name,driver_version,power.draw,temperature.gpu --format=csv,noheader | sed 's/^/  /'
+if nvidia-smi --query-gpu=name,driver_version,power.draw,temperature.gpu --format=csv,noheader 2>/dev/null | sed 's/^/  /'; then
+  ok "nvidia-smi 통신 정상"
+else
+  bad "nvidia-smi 실패 — GPU가 드라이버와 통신 불가 (언록 실패로 GSP가 멈췄을 가능성. 06_rollback.sh 로 부트 옵션 제거 후 재부팅 필요)"
+fi
 
 echo "== 5) DKMS 상태 =="
 sudo dkms status 2>/dev/null | grep gpu-unlock | sed 's/^/  /' || warn "dkms status 에 gpu-unlock 없음"
