@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/banner.svg" alt="RTX 4070 SUPER — GPU UNLOCK" width="100%">
+  <img src="assets/banner.png" alt="RTX 4070 SUPER — GPU UNLOCK" width="100%">
 </p>
 
 <p align="center">
