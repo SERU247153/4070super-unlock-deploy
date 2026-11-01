@@ -30,16 +30,20 @@ POWER_INFO=$(nvidia-smi -q -d POWER)
 MIN_PL=$(echo "$POWER_INFO" | awk -F: '/Min Power Limit/{gsub(/[^0-9.]/,"",$2); print $2}')
 MAX_PL=$(echo "$POWER_INFO" | awk -F: '/Max Power Limit/{gsub(/[^0-9.]/,"",$2); print $2}')
 DEF_PL=$(echo "$POWER_INFO" | awk -F: '/Default Power Limit/{gsub(/[^0-9.]/,"",$2); print $2}')
-CUR_PL=$(echo "$POWER_INFO" | awk -F: '/Current Power Limit/{gsub(/[^0-9.]/,"",$2); print $2}')
+CUR_PL=$(echo "$POWER_INFO" | awk -F: '/Enforced Power Limit/{gsub(/[^0-9.]/,"",$2); print $2}')
 echo "  min=${MIN_PL}W / default=${DEF_PL}W / max=${MAX_PL}W / 현재=${CUR_PL}W"
 
-TARGET="$POWER_LIMIT_MODE"
-[ "$TARGET" = "max" ] && TARGET="$MAX_PL"
-if awk -v t="$TARGET" -v lo="$MIN_PL" -v hi="$MAX_PL" 'BEGIN{exit !(t>=lo && t<=hi)}'; then
-  sudo nvidia-smi -pl "$TARGET" | sed 's/^/  /'
-  ok "전력 제한 ${TARGET}W 적용"
+if [ -z "$MIN_PL" ] || [ -z "$MAX_PL" ] || [ -z "$DEF_PL" ]; then
+  bad "전력 제한 정보를 읽지 못함 — 이 항목 건너뜀"
 else
-  warn "목표 ${TARGET}W 가 허용 범위(${MIN_PL}~${MAX_PL}W) 밖 — 설정 생략"
+  TARGET="$POWER_LIMIT_MODE"
+  [ "$TARGET" = "max" ] && TARGET="$MAX_PL"
+  if awk -v t="$TARGET" -v lo="$MIN_PL" -v hi="$MAX_PL" 'BEGIN{exit !(t>=lo && t<=hi)}'; then
+    sudo nvidia-smi -pl "$TARGET" | sed 's/^/  /'
+    ok "전력 제한 ${TARGET}W 적용"
+  else
+    warn "목표 ${TARGET}W 가 허용 범위(${MIN_PL}~${MAX_PL}W) 밖 — 설정 생략"
+  fi
 fi
 
 echo "== 3) 클럭 고정 (선택) =="

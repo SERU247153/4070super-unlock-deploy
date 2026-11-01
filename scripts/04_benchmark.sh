@@ -18,6 +18,10 @@ if [ "$PHASE" != "before" ] && [ "$PHASE" != "after" ]; then
   echo "사용법: $0 before|after" >&2
   exit 1
 fi
+command -v nvidia-smi >/dev/null 2>&1 || {
+  echo "오류: nvidia-smi 없음 — NVIDIA 드라이버 설치 확인 필요" >&2
+  exit 1
+}
 
 RESULTS_DIR="$DEPLOY_DIR/results"
 mkdir -p "$RESULTS_DIR"
@@ -29,8 +33,8 @@ echo
 
 docker run --rm --gpus all \
   -e "CUBLAS_WORKSPACE_CONFIG=:4096:8" \
-  -v "$SCRIPT_DIR/bench.py:/tmp/bench.py:ro" \
-  -v "$RESULTS_DIR:/results" \
+  -v "$SCRIPT_DIR/bench.py:/tmp/bench.py:ro,Z" \
+  -v "$RESULTS_DIR:/results:Z" \
   "$BENCH_IMAGE" \
   python /tmp/bench.py \
     --label "$PHASE" \

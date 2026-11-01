@@ -15,7 +15,7 @@ DEPLOY_DIR="$(dirname "$SCRIPT_DIR")"
 # shellcheck source=../config.sh
 source "$DEPLOY_DIR/config.sh"
 
-G='\033[0;32m'; R='\033[0;31m'; Y='\033[1;33m'; N='\033[0m'
+G='\033[0;32m'; Y='\033[1;33m'; N='\033[0m'
 ok()   { printf "${G}  [OK]${N}   %s\n" "$*"; }
 warn() { printf "${Y}  [WARN]${N} %s\n" "$*"; }
 
@@ -54,6 +54,8 @@ if [ -n "${DEF_PL:-}" ]; then
 fi
 sudo nvidia-smi -rgc 2>/dev/null || true
 ok "클럭 고정 해제"
+# 주의: 서버가 원래 persistence mode를 사용 중이었다면(nvidia-persistenced 등)
+# 부팅 후 다시 켜주세요. 여기서는 본 키트의 03_tune.sh 가 켠 것을 되돌립니다.
 sudo nvidia-smi -pm 0 2>/dev/null || true
 ok "persistence mode 해제"
 sudo nvidia-smi -rg 2>/dev/null || true

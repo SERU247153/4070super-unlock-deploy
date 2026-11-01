@@ -25,7 +25,7 @@ echo "== 1) OS =="
 . /etc/os-release
 echo "  ${PRETTY_NAME:-$ID ${VERSION_ID:-}}"
 case "${ID:-}:${ID_LIKE:-}" in
-  rocky*|*rhel*|*centos*|rhel*|centos*) ok "RHEL 계열 — make install-rpm 경로 사용" ;;
+  rocky*|*rhel*|*centos*|*fedora*) ok "RHEL 계열 — make install-rpm 경로 사용" ;;
   *) warn "RHEL 계열이 아님 (ID=$ID, ID_LIKE=$ID_LIKE). 스크립트는 Rocky 9 기준이라 수정이 필요할 수 있음" ;;
 esac
 
@@ -58,7 +58,7 @@ fi
 
 echo "== 5) 필요 패키지 =="
 MISSING=()
-for p in gcc make python3 zstd git curl grubby pciutils dracut rpm-build dnf-plugins-core epel-release dkms "kernel-devel-$(uname -r)"; do
+for p in gcc make python3 zstd git curl grubby mokutil pciutils dracut rpm-build dnf-plugins-core epel-release dkms "kernel-devel-$(uname -r)"; do
   if rpm -q "$p" >/dev/null 2>&1; then ok "$p"
   else bad "$p 없음"; MISSING+=("$p"); fi
 done
@@ -68,7 +68,7 @@ if [ ${#MISSING[@]} -gt 0 ]; then
     echo "  -> 누락 패키지 설치 중 (sudo 권한 필요)..."
     sudo dnf install -y epel-release || true
     sudo dnf install -y dkms rpm-build dnf-plugins-core "kernel-devel-$(uname -r)" \
-         gcc make python3 zstd git curl grubby pciutils dracut
+         gcc make python3 zstd git curl grubby mokutil pciutils dracut
     FAIL=0
     echo "  -> 재확인:"
     for p in "${MISSING[@]}"; do
@@ -78,7 +78,7 @@ if [ ${#MISSING[@]} -gt 0 ]; then
   else
     warn "누락 패키지 있음 — '$0 --fix' 로 자동 설치하거나 직접:"
     echo "      sudo dnf install -y epel-release"
-    echo "      sudo dnf install -y dkms rpm-build dnf-plugins-core kernel-devel-\$(uname -r) gcc make python3 zstd git curl grubby pciutils dracut"
+    echo "      sudo dnf install -y dkms rpm-build dnf-plugins-core kernel-devel-\$(uname -r) gcc make python3 zstd git curl grubby mokutil pciutils dracut"
   fi
 fi
 
@@ -95,6 +95,11 @@ if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
   ok "docker 동작 중"
 else
   warn "docker 미동작 (권한 문제라면 sudo docker, 벤치마크는 호스트 파이썬 폴백 불가 — 도커 확인 필요)"
+fi
+if command -v nvidia-container-toolkit >/dev/null 2>&1 || command -v nvidia-ctk >/dev/null 2>&1; then
+  ok "nvidia-container-toolkit 설치됨 (--gpus 사용 가능)"
+else
+  warn "nvidia-container-toolkit 미발견 — 도커 벤치마크(--gpus all)가 실패할 수 있음"
 fi
 
 echo "== 8) 현재 전력/ReBAR 상태 =="

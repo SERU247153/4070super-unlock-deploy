@@ -122,5 +122,6 @@ sudo reboot
 
 ## 🔗 참고
 
+- 📄 [기술 보고서 (논문 스타일)](docs/technical-report.md) — 설계·구현·실험 방법론
 - [Zagitta/gpu-unlock](https://github.com/Zagitta/gpu-unlock) — 원본 프로젝트 (⭐ 13.9k)
 - RTX 40 세대(Ada)는 **Experimental** 단계 — 본 키트의 04/05 스크립트로 적용 여부를 즉시 확인 가능
