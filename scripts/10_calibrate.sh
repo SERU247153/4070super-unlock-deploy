@@ -40,6 +40,9 @@ restore_state() {
 trap restore_state EXIT
 
 sudo nvidia-smi -pm 1 >/dev/null 2>&1 || true
+# 깨끗한 시작 상태: 최대 전력 + 클럭 고정 해제
+sudo nvidia-smi -pl "$(max_power)" >/dev/null 2>&1 || true
+sudo nvidia-smi -rgc >/dev/null 2>&1 || true
 
 run_case() { # $1=label $2=출력 json 경로
   local label=$1 out=$2
@@ -82,7 +85,7 @@ sudo nvidia-smi -lgc "$BENCH_LOCK_CLOCKS" >/dev/null 2>&1 \
   || printf "${Y}클럭 고정 실패 — 부스트 상태로 진행${N}\n"
 for P in $POWER_SWEEP; do
   echo "  전력 제한 ${P}W 측정 중..."
-  sudo nvidia-smi -pl "$P" >/dev/null 2>&1
+  sudo nvidia-smi -pl "$P" >/dev/null 2>&1 || { echo "  전력 설정 실패(${P}W) — 스킵"; continue; }
   run_case "p${P}" "$CAL_DIR/p${P}.json"
 done
 
