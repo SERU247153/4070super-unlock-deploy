@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 500" font-family="'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0a0f1e"/>
+      <stop offset="0.55" stop-color="#071221"/>
+      <stop offset="1" stop-color="#0b1f1a"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.72" cy="0.45" r="0.55">
+      <stop offset="0" stop-color="#10b981" stop-opacity="0.32"/>
+      <stop offset="0.6" stop-color="#10b981" stop-opacity="0.06"/>
+      <stop offset="1" stop-color="#10b981" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="title" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#c7d2fe"/>
+    </linearGradient>
+    <filter id="neon" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="500" fill="url(#bg)"/>
+  <rect width="1600" height="500" fill="url(#glow)"/>
+
+  <!-- circuit traces -->
+  <g stroke="#10b981" stroke-width="2.5" fill="none" opacity="0.55" filter="url(#neon)">
+    <polyline points="0,80 320,80 380,140 1180,140"/>
+    <polyline points="0,150 200,150 260,210 260,420 1180,420"/>
+    <polyline points="0,430 400,430 460,370 1180,370"/>
+    <polyline points="1400,0 1400,80 1340,140"/>
+    <polyline points="1520,0 1520,90 1460,150"/>
+  </g>
+  <g fill="#34d399" filter="url(#neon)">
+    <circle cx="1180" cy="140" r="7"/>
+    <circle cx="1180" cy="420" r="7"/>
+    <circle cx="1180" cy="370" r="7"/>
+    <circle cx="320" cy="80" r="6"/>
+    <circle cx="400" cy="430" r="6"/>
+  </g>
+
+  <!-- GPU chip -->
+  <g transform="translate(1250 130)">
+    <rect x="0" y="0" width="260" height="150" rx="14" fill="#0d1f2b" stroke="#10b981" stroke-width="3"/>
+    <rect x="34" y="34" width="192" height="82" rx="8" fill="#06121c" stroke="#2dd4bf" stroke-width="1.5" opacity="0.9"/>
+    <g stroke="#34d399" stroke-width="2" opacity="0.8">
+      <line x1="66" y1="56" x2="194" y2="56"/>
+      <line x1="66" y1="75" x2="194" y2="75"/>
+      <line x1="66" y1="94" x2="194" y2="94"/>
+    </g>
+    <text x="130" y="30" text-anchor="middle" font-size="26" font-weight="800" fill="#5eead4" letter-spacing="6">GPU</text>
+    <!-- pins -->
+    <g stroke="#10b981" stroke-width="3" opacity="0.8">
+      <line x1="-18" y1="20" x2="0" y2="20"/><line x1="260" y1="20" x2="278" y2="20"/>
+      <line x1="-18" y1="55" x2="0" y2="55"/><line x1="260" y1="55" x2="278" y2="55"/>
+      <line x1="-18" y1="90" x2="0" y2="90"/><line x1="260" y1="90" x2="278" y2="90"/>
+      <line x1="-18" y1="125" x2="0" y2="125"/><line x1="260" y1="125" x2="278" y2="125"/>
+    </g>
+    <!-- pulses -->
+    <g fill="#34d399" opacity="0.9">
+      <circle cx="278" cy="55" r="4"/>
+      <circle cx="278" cy="125" r="4"/>
+      <circle cx="-18" cy="20" r="4"/>
+    </g>
+  </g>
+
+  <!-- titles -->
+  <text x="100" y="228" font-size="104" font-weight="800" fill="url(#title)" letter-spacing="2">RTX 4070 SUPER</text>
+  <text x="104" y="316" font-size="44" font-weight="700" fill="#34d399" letter-spacing="5" filter="url(#neon)">GPU UNLOCK</text>
+  <text x="104" y="376" font-size="28" font-weight="500" fill="#94a3b8" letter-spacing="3">2&#215; TENSOR THROUGHPUT &#183; FP16 / BF16 / TF32</text>
+
+  <rect x="100" y="432" width="62" height="24" rx="12" fill="#10b981" opacity="0.18" stroke="#10b981" stroke-width="1.5"/>
+  <text x="131" y="449" text-anchor="middle" font-size="15" font-weight="700" fill="#5eead4">ROCKY 9</text>
+  <rect x="176" y="432" width="82" height="24" rx="12" fill="#10b981" opacity="0.18" stroke="#10b981" stroke-width="1.5"/>
+  <text x="217" y="449" text-anchor="middle" font-size="15" font-weight="700" fill="#5eead4">DOCKER</text>
+  <rect x="272" y="432" width="76" height="24" rx="12" fill="#10b981" opacity="0.18" stroke="#10b981" stroke-width="1.5"/>
+  <text x="310" y="449" text-anchor="middle" font-size="15" font-weight="700" fill="#5eead4">JUPYTER</text>
+</svg>
