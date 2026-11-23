@@ -22,6 +22,8 @@ mkdir -p /root/workspace/edge-project/{data,models,notebooks,scripts}
 mkdir -p /root/workspace/.hf-cache
 
 # 2) 패키지 설치 — 전부 버전 고정
+#    ※ tensorflow/TFLite 변환은 메인 컨테이너에 넣지 않는다 (tf-keras 충돌 확인)
+#      → scripts/export_tflite.sh 의 일회성 변환 컨테이너로 분리
 docker exec $CONT pip install -q \
   "ultralytics==8.3.180" \
   "transformers==4.44.2" \
@@ -30,7 +32,6 @@ docker exec $CONT pip install -q \
   "bitsandbytes==0.43.3" \
   "peft==0.13.2" \
   "numpy>=1.26,<2" \
-  "tensorflow-cpu==2.16.2" \
   "opencv-python-headless==4.10.0.84"
 
 # 2-1) torch 보호 검증 (업그레이드 시 즉시 중단)
@@ -55,21 +56,16 @@ from transformers import Dinov2Model
 Dinov2Model.from_pretrained("facebook/dinov2-small", cache_dir="/workspace/.hf-cache")
 print("모델 준비 완료")'
 
-# 4-1) TFLite INT8 변환 스모크 테스트 (클래식 TF 경로)
-docker exec $CONT python -c '
-from ultralytics import YOLO
-import os
-m = YOLO("yolov8n.pt")
-r = m.export(format="tflite", int8=True, nms=False)
-print("TFLite INT8:", round(os.path.getsize(r)/1e6, 1), "MB")'
+# 4-1) TFLite 변환은 별도 변환 컨테이너에서 (scripts/export_tflite.sh)
+#     — 메인 환경의 numpy/torch를 건드리지 않는 격리 방식
 
 # 5) 최종 검증
 docker exec $CONT python -c '
-import torch, numpy, flash_attn, cv2, ultralytics, transformers, tensorflow as tf
+import torch, numpy, flash_attn, cv2, ultralytics, transformers
 print("torch", torch.__version__)
 print("flash-attn", flash_attn.__version__)
 print("numpy", numpy.__version__, "| opencv", cv2.__version__)
-print("ultralytics", ultralytics.__version__, "| transformers", transformers.__version__, "| tf", tf.__version__)
+print("ultralytics", ultralytics.__version__, "| transformers", transformers.__version__)
 print("OK")'
 
 echo "엣지 프로젝트 환경 셋업 완료"
