@@ -83,6 +83,17 @@
         최적화 기법 목록(44개)을 프로젝트 기준으로 정리
 [2026-11-24]
   본 보고서 작성. 개발 착수 조건(OpenStack 접근, 자재 사진 데이터) 확인 대기.
+  환경 셋업 착수 (데이터 없이 가능한 부분 선진행):
+  · jupyter 컨테이너에 ultralytics 8.4.216 + transformers 4.44.2(torch 2.4 호환
+    버전 고정) + accelerate/datasets/bitsandbytes 설치
+  · TF32 + cudnn.benchmark + HF_HOME(/workspace/.hf-cache) 노트북 자동 주입
+  · DINOv2-small GPU 추론 스모크 테스트 성공 (2x257x384 임베딩, fp16)
+  · YOLOv8n 가중치 다운로드·로드 성공 (DetectionModel)
+  · 이슈: transformers 최신(4.57)이 NGC 컨테이너와 ABI 충돌 → 4.44.2 고정
+  · 이슈: docker commit 이미지 72GB 비대(캐시 포함) → 제거 후 재현 스크립트
+    (scripts/edge_setup.sh)로 대체, 디스크 74GB 확보
+  · 작업 위치: /root/workspace/edge-project/{data,models,notebooks,scripts}
+  다음: 자재 사진 데이터 확보 → YOLOv8 학습 파이프라인 구축
 
 --------------------------------------------------------------------------------
 5. 측정 데이터

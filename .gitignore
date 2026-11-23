@@ -5,3 +5,10 @@ results/*
 __pycache__/
 *.pyc
 .DS_Store
+# phase2
+!results/serving/
+!results/serving/*.json
+monitoring/.env
+monitoring/grafana.env
+monitoring/grafana/dashboards/nvidia-gpu-exporter.json
+monitoring/grafana/dashboards/dcgm-exporter.json

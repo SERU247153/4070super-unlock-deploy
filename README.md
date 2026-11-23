@@ -177,3 +177,28 @@ sudo reboot
 - 📓 [실전 배포 일지](docs/deployment-log.md) — 대상 서버 배포 기록
 - [Zagitta/gpu-unlock](https://github.com/Zagitta/gpu-unlock) — 원본 프로젝트 (⭐ 13.9k)
 - RTX 40 세대(Ada)는 **Experimental** 단계 — 본 키트의 04/05 스크립트로 적용 여부를 즉시 확인 가능
+
+---
+
+## 🧪 2단계: 서버 최적화 · 실습 환경 · LLM 서빙
+
+언록을 마친 서버에 **실습 스택 · 호스트 튜닝 · 모니터링 · LLM 서빙**을 올립니다. 설정은 `config.phase2.sh` 한 파일이고, **재부팅을 하지 않습니다**.
+자세한 내용(1~38번 항목별 위치, 설계 이유)은 [2단계 가이드](docs/phase2-guide.md)를 참고하세요.
+
+| # | 명령 | 내용 |
+|---|---|---|
+| 1️⃣ | `sudo bash scripts/11_snapshot.sh` | 사전 점검 (읽기 전용) |
+| 2️⃣ | `sudo bash scripts/12_container_libs.sh` | 실습 라이브러리 · TF32 자동 주입 · `vLLM (venv)` 커널 · Nsight · nvdashboard · 템플릿 노트북 |
+| 3️⃣ | `sudo bash scripts/13_commit_recreate.sh` | 이미지 커밋 + HF 캐시 볼륨 (기존 컨테이너는 백업 보관) |
+| 4️⃣ | `sudo bash scripts/14_host_tune.sh` | 부팅 시 전력 캡 180W · Ollama FlashAttention/KV 캐시 q8_0 · taskset |
+| 5️⃣ | `sudo bash scripts/16_monitoring.sh up` | DCGM/nvidia_gpu_exporter + Prometheus + Grafana (:3001) |
+| 6️⃣ | `sudo bash scripts/17_serve.sh vllm` | OpenAI 호환 서빙 (`vllm-spec` · `vllm-fi` · `vllm-gptq` · `vllm-big` · `sglang` · `trtllm`) |
+| 7️⃣ | `sudo bash scripts/18_serve_bench.sh --all` | 모드별 TTFT · TPOT · 처리량 · JSON 유효율 비교 |
+| ➕ | `sudo bash scripts/15_mps.sh on` | 다인원 실습용 MPS |
+| ➕ | `sudo bash scripts/19_trtllm.sh check\|build\|serve` | TensorRT-LLM (선택, 실험적) |
+| ↩️ | `sudo bash scripts/20_phase2_rollback.sh` | 2단계 원복 (1단계 언록은 유지) |
+
+**템플릿 노트북** (`notebooks/`, 주피터의 `gpu-lab-templates/` 에 자동 배포)
+- `01_train_optimization` — TF32 · BF16/FP16+GradScaler · FlashAttention · FP8 · fused/8-bit Adam · 체크포인팅 · torch.compile · 누적 · DataLoader/DALI/CUDA 스트림 · 할당자 · datasets 캐시 · Nsight
+- `02_qlora_finetune` — QLoRA/DoRA (7B~14B) · Paged 8-bit AdamW · TRL · ZeRO-Offload
+- `03_inference_serving` — vLLM API · 동시 요청 · Speculative Decoding/FlashInfer/AWQ·GPTQ 비교 · 구조화 출력 · 도구 호출 · Torch-TensorRT · ONNX Runtime TRT EP

@@ -1,0 +1,71 @@
+# GPU 모니터링 스택 (16_monitoring.sh 가 .env 를 생성해 실행)
+#   nvidia_gpu_exporter : nvidia-smi 기반 — GeForce 전 지표 지원 (기본)
+#   dcgm-exporter       : DCGM 기반 — GeForce 는 일부 지표만 (profile: dcgm)
+#   prometheus → grafana (대시보드 자동 프로비저닝)
+name: ${MON_PROJECT}
+
+services:
+  gpu-exporter:
+    image: ${IMG_GPU_EXPORTER}
+    restart: unless-stopped
+    environment:
+      - NVIDIA_DRIVER_CAPABILITIES=utility,compute
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  dcgm-exporter:
+    image: ${IMG_DCGM_EXPORTER}
+    profiles: ["dcgm"]
+    restart: unless-stopped
+    cap_add: [SYS_ADMIN]
+    environment:
+      - NVIDIA_DRIVER_CAPABILITIES=utility,compute
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  prometheus:
+    image: ${IMG_PROMETHEUS}
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=30d
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro,Z
+      - prom_data:/prometheus
+    ports:
+      - "127.0.0.1:${PROMETHEUS_PORT}:9090"
+    networks: [default, lab]          # lab: 서빙 컨테이너(llm-serve) /metrics 수집용
+
+  grafana:
+    image: ${IMG_GRAFANA}
+    restart: unless-stopped
+    env_file: [grafana.env]
+    environment:
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/gpu-lab-overview.json
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro,Z
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro,Z
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "${GRAFANA_BIND}:${GRAFANA_PORT}:3000"
+    depends_on: [prometheus]
+
+volumes:
+  prom_data:
+  grafana_data:
+
+networks:
+  lab:
+    name: ${LAB_NETWORK}
+    external: true

@@ -1,0 +1,40 @@
+# 필요할 때만 켜는 LLM 서빙 (Ollama·Jupyter 와 12GB VRAM 을 나눠 쓰므로 상시 기동 금지)
+# 사용: sudo bash optimize/30_serving.sh vllm-up | sglang-up | down | status
+name: llm-serving
+services:
+  vllm:
+    profiles: ["vllm"]
+    image: ${VLLM_IMAGE}
+    container_name: vllm
+    ipc: host
+    ports: ["${VLLM_PORT}:8000"]
+    volumes: ["/opt/hf-cache:/root/.cache/huggingface"]
+    environment:
+      - VLLM_ATTENTION_BACKEND=${VLLM_ATTENTION_BACKEND:-}
+    command: >
+      --model ${VLLM_MODEL}
+      --gpu-memory-utilization ${VLLM_GPU_UTIL}
+      --max-model-len ${VLLM_MAX_LEN}
+      --enable-prefix-caching
+      --guided-decoding-backend outlines
+    deploy:
+      resources:
+        reservations:
+          devices: [{driver: nvidia, count: all, capabilities: [gpu]}]
+    restart: "no"
+  sglang:
+    profiles: ["sglang"]
+    image: ${SGLANG_IMAGE}
+    container_name: sglang
+    ipc: host
+    ports: ["${SGLANG_PORT}:30000"]
+    volumes: ["/opt/hf-cache:/root/.cache/huggingface"]
+    command: >
+      python3 -m sglang.launch_server --model-path ${VLLM_MODEL}
+      --host 0.0.0.0 --port 30000 --mem-fraction-static ${VLLM_GPU_UTIL}
+      --context-length ${VLLM_MAX_LEN}
+    deploy:
+      resources:
+        reservations:
+          devices: [{driver: nvidia, count: all, capabilities: [gpu]}]
+    restart: "no"
