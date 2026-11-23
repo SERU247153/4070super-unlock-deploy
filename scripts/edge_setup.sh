@@ -31,7 +31,7 @@ docker exec $CONT pip install -q \
   "peft==0.13.2" \
   "numpy>=1.26,<2" \
   "tensorflow-cpu==2.16.2" \
-  "opencv-python==4.10.0.84"
+  "opencv-python-headless==4.10.0.84"
 
 # 2-1) torch 보호 검증 (업그레이드 시 즉시 중단)
 docker exec $CONT python -c 'import torch; assert torch.__version__.startswith("2.4"), f"torch가 {torch.__version__}로 변경됨! 핀 점검 필요"'
