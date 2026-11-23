@@ -40,27 +40,34 @@ def embed(backbone, images, batch=32):
     return F.normalize(torch.cat(feats), dim=-1)
 
 
-def train_probe(backbone, loader, classes, epochs=20, lr=1e-3):
-    """모드 A: 특징 고정 + 선형 프로브 (DINOv2: 미세조정 능가, 2026)"""
+def train_probe(backbone, loader, classes, epochs=20, lr=1e-3, compile=False):
+    """모드 A: 특징 고정 + 선형 프로브 (DINOv2: 미세조정 능가, 2026)
+    PyTorch 문서 반영: torch.amp.autocast(bf16 — GradScaler 불필요),
+    AdamW(fused=True), torch.compile 선택, state_dict 저장"""
     backbone.eval().cuda().half()
     for p in backbone.parameters():
         p.requires_grad = False
     head = torch.nn.Linear(384, classes).cuda()
-    opt = torch.optim.AdamW(head.parameters(), lr=lr)
+    if compile:
+        head = torch.compile(head)
+    opt = torch.optim.AdamW(head.parameters(), lr=lr, fused=True)
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, epochs)
     for ep in range(epochs):
         for x, y in loader:
             x = x.cuda().half()
             with torch.inference_mode():
                 f = backbone(x).last_hidden_state[:, 0]
-            loss = F.cross_entropy(head(f), y.cuda())
+            with torch.amp.autocast("cuda", dtype=torch.bfloat16):
+                loss = F.cross_entropy(head(f.float()), y.cuda())
             opt.zero_grad(); loss.backward(); opt.step()
         sched.step()
+    torch.save({"head": head.state_dict(), "classes": classes}, "probe.pt")
     return head
 
 
 def train_qlora(backbone, loader, classes, epochs=20, lr=1e-4):
-    """모드 B: QLoRA 4비트 + 그라디언트 체크포인팅 (유사 자재 구분 강화)"""
+    """모드 B: QLoRA 4비트 + 그라디언트 체크포인팅 (유사 자재 구분 강화)
+    PyTorch 문서 반영: torch.amp.autocast(bf16), AdamW(fused=True)"""
     from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 
     backbone = prepare_model_for_kbit_training(backbone)
@@ -71,12 +78,14 @@ def train_qlora(backbone, loader, classes, epochs=20, lr=1e-4):
     m.gradient_checkpointing_enable()          # 활성화 메모리 절약 (2026 정적 체크포인팅)
     m.config.use_cache = False
     head = torch.nn.Linear(384, classes).cuda()
-    opt = torch.optim.AdamW(list(m.parameters()) + list(head.parameters()), lr=lr)
+    opt = torch.optim.AdamW(list(m.parameters()) + list(head.parameters()),
+                            lr=lr, fused=True)
     for ep in range(epochs):
         for x, y in loader:
             x = x.cuda().half()
-            o = m(x)                            # 4비트 양자화 가중치 + 체크포인팅
-            loss = F.cross_entropy(head(o.last_hidden_state[:, 0]), y.cuda())
+            with torch.amp.autocast("cuda", dtype=torch.bfloat16):
+                o = m(x)                        # 4비트 양자화 가중치 + 체크포인팅
+                loss = F.cross_entropy(head(o.last_hidden_state[:, 0]), y.cuda())
             opt.zero_grad(); loss.backward(); opt.step()
     return m, head
 

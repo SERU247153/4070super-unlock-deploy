@@ -19,10 +19,12 @@ docker exec $CONT pip install -q \
 # 3) 성능 자동 주입 (모든 노트북에 적용)
 docker exec $CONT mkdir -p /root/.ipython/profile_default/startup
 docker exec $CONT sh -c 'cat > /root/.ipython/profile_default/startup/10-gpu-perf.py <<EOF
-import os, torch
-torch.backends.cuda.matmul.allow_tf32 = True
-torch.backends.cudnn.benchmark = True
+import os
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 os.environ.setdefault("HF_HOME", "/workspace/.hf-cache")
+import torch
+torch.set_float32_matmul_precision("high")
+torch.backends.cudnn.benchmark = True
 EOF'
 
 # 4) 모델 사전 다운로드 (선택 — 스모크 테스트 겸 캐시)
