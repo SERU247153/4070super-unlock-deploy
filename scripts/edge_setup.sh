@@ -11,10 +11,17 @@ CONT=jupyter_ai
 mkdir -p /root/workspace/edge-project/{data,models,notebooks,scripts}
 mkdir -p /root/workspace/.hf-cache
 
-# 2) 패키지 설치 (transformers는 NGC 24.07/torch 2.4 호환 버전으로 고정,
-#    numpy<2 는 컨테이너 내 soxr 등 C확장 ABI 호환용)
+# 2) 패키지 설치 — 버전 고정 필수!
+#    · torch/torchvision/flash-attn/transformer-engine 은 NGC 번들 그대로 사용
+#      (pip로 torch 업그레이드 금지 — flash-attn ABI 파손, 2026-11-24 실전 확인)
+#    · transformers==4.44.2 : NGC 24.07/torch 2.4 호환 (상위 버전은 ABI 충돌)
+#    · ultralytics==8.3.180 : TFLite 클래식(TF) 경로 유지용.
+#      8.4.x부터 LiteRT/jax 스택으로 전환되어 numpy1.x·RAPIDS와 충돌함
+#    · tensorflow-cpu==2.16.2 : TFLite INT8 변환용 (numpy<2 필요)
+#    · numpy<2 : 컨테이너 RAPIDS(cudf/cupy/numba)와 soxr 호환
 docker exec $CONT pip install -q \
-  ultralytics "transformers==4.44.2" accelerate datasets bitsandbytes "numpy<2"
+  "ultralytics==8.3.180" "transformers==4.44.2" accelerate datasets bitsandbytes \
+  "numpy<2" peft "tensorflow-cpu==2.16.2"
 
 # 3) 성능 자동 주입 (모든 노트북에 적용)
 docker exec $CONT mkdir -p /root/.ipython/profile_default/startup
@@ -34,6 +41,14 @@ YOLO("yolov8n.pt")
 from transformers import Dinov2Model
 Dinov2Model.from_pretrained("facebook/dinov2-small", cache_dir="/workspace/.hf-cache")
 print("모델 준비 완료")'
+
+# 4-1) TFLite INT8 변환 스모크 테스트 (클래식 TF 경로, numpy<2)
+docker exec $CONT python -c '
+from ultralytics import YOLO
+import os
+m = YOLO("yolov8n.pt")
+r = m.export(format="tflite", int8=True, nms=False)
+print("TFLite INT8:", round(os.path.getsize(r)/1e6, 1), "MB")'
 
 # 5) 검증
 docker exec $CONT python -c '
