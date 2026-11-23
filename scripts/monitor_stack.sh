@@ -13,7 +13,7 @@ docker network create monitor >/dev/null 2>&1 || true
 # 1) NVIDIA DCGM exporter (GPU 메트릭 → Prometheus)
 docker run -d --name dcgm-exporter --network monitor --restart always \
   --gpus all --cap-add SYS_ADMIN \
-  nvcr.io/nvidia/k8s/dcgm-exporter:3.3.9-3.6.2-ubuntu22.04 >/dev/null
+  nvidia/dcgm-exporter:4.9.0 >/dev/null
 
 # 2) Prometheus (DCGM 스크랩)
 cat > /tmp/prometheus.yml <<'EOF'
@@ -27,7 +27,7 @@ docker run -d --name prometheus --network monitor --restart always \
   prom/prometheus >/dev/null
 
 # 3) Grafana (Prometheus 데이터소스 + GPU 대시보드 자동 프로비저닝)
-mkdir -p /root/monitor/provisioning/datasources /root/monitor/dashboards
+mkdir -p /root/monitor/provisioning/datasources /root/monitor/provisioning/dashboards /root/monitor/dashboards
 cat > /root/monitor/provisioning/datasources/ds.yml <<'EOF'
 apiVersion: 1
 datasources:
