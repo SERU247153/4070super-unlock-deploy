@@ -76,13 +76,19 @@
   정확도:   자재 검출 mAP50 ≥0.85(모의 적치장), 식별 ≥0.90(10장 등록)
 
 --------------------------------------------------------------------------------
-6. 연구 기여 (차별화 5축)
+6. 연구 기여 (차별화 5축) — 선행연구 대비 포지셔닝
 --------------------------------------------------------------------------------
-  A. 입고·사용·반출 이벤트 자동 기록 (기존 '개수 세기' 연구와 차별)
-  B. LoRa 페더레이티드 러닝 — 통신망 없는 현장의 연합학습 (독창, 통신전공 강점)
-  C. Conformal 기반 불확실성 정식화 + 3회 연속 확정
-  D. 어텐션 기반 해석가능 판정 (rollout/HiResCAM/가중 풀링)
-  E. 실시간 예산 정식화 (ms 단위 측정·보고, 189FPS 참조)
+  A. 입고·사용·반출 이벤트 자동 기록
+     - 기존 건설 계수 연구[1][2]는 '개수'만 산출 — 이벤트 기록은 본 연구 고유
+  B. 대표벡터 교환형 초경량 연합학습 (LoRa)
+     - LoRa 기반 FL은 2024-2026 활발[21][22][23][24][25][26] — 단, 모두
+       모델 가중치(수 KB~수백 KB) 교환. 본 연구는 **대표벡터(수백 바이트)만
+       교환** → 패킷/공중시간 10배 이상 절감 + 도메인(건설 자재) 최초
+  C. Conformal 기반 불확실성 정식화[18] + 3회 연속 확정
+     - "모르면 보류"를 보장된 오류율로 정식화 — 휴리스틱 임계값과 차별
+  D. 어텐션 기반 해석가능 판정[16][17] (rollout+키정규화 / HiResCAM / 가중 풀링)
+  E. 실시간 예산 정식화 (ms 단위 측정·보고, CUDA Graph[PyTorch 문서])
+     - 텐서코어 언록 기반[27][28] — 데스크톱 참조 189FPS
 
 --------------------------------------------------------------------------------
 7. 추진 단계
@@ -100,4 +106,78 @@
   - YOLO 데이터셋 구성(YAML) → 1차 학습 → mAP 보고
   - DINOv2 등록 실험 스크립트 → 장수별 식별 정확도 Table
   - LoRa 패킷 명세 초안 (제가 ML 요구사항으로 작성, 통신 설계는 위임)
+
+--------------------------------------------------------------------------------
+9. 참고문헌 (분야별)
+--------------------------------------------------------------------------------
+[건설 현장 검출·계수]
+ [1] Chen 외, "개선된 YOLOv4 기반 현장 자재 계수 앱", 2024. (연구계획서 인용)
+ [2] Wong 외, "실내 공사 현장 감시 영상의 YOLOv4+DenseNet 기반 작업자·자재
+     탐지 및 타일 더미 계수", 2025. (연구계획서 인용)
+ [3] "Data-Efficient Object Detection on Construction Sites Using Reweighting
+     Mechanism and Cross-Batch Contrastive Learning", IEEE Trans. Industrial
+     Informatics, 2025. doi:10.1109/TII.2025.3558311
+ [4] "Construction site object detection with active transfer learning and
+     weighted adaptive uncertainty-diversity sampling", Automation in
+     Construction, 2026. (YOLOv10, mAP50 0.885, 라벨링 30~40% 절감)
+ [5] "DINO-YOLO: Self-Supervised Pre-training for Data-Efficient Object
+     Detection in Civil Engineering Applications", arXiv:2510.25140, 2025.
+     (YOLOv12+DINOv3, 소량 데이터 +12~14%)
+ [6] "WAC-YOLO: A Novel Lightweight Detection Algorithm for Safety Equipment
+     on Construction Sites", IEEE CEECT, 2025. (1.4M 파라미터, 4.3 GFLOPs)
+
+[기반 모델]
+ [7] G. Jocher et al., "Ultralytics YOLOv8", GitHub, 2023.
+ [8] M. Oquab et al., "DINOv2: Learning Robust Visual Features without
+     Supervision", TMLR, 2024.
+ [9] Meta AI, "DINOv3", arXiv, 2025.
+[10] N. Ravi et al., "SAM 2: Segment Anything in Images and Videos",
+     ICLR, 2025. (arXiv:2408.00714)
+
+[PEFT·메모리 효율]
+[11] E. Hu et al., "LoRA: Low-Rank Adaptation of Large Language Models",
+     ICLR, 2022.
+[12] T. Dettmers et al., "QLoRA: Efficient Finetuning of Quantized LLMs",
+     NeurIPS, 2023.
+[13] "Memory-Efficient Fine-Tuning via Low-Rank Activation Compression
+     (LORACT)", arXiv:2509.23472, 2025.
+[14] "Efficient PEFT Methods with Adaptive Checkpointing for Vision Models
+     and VLMs on Resource Constrained Consumer-GPUs", arXiv:2607.02158, 2026.
+     (DINOv2 선형프로브가 미세조정 능가, QLoRA/BitFit 에너지 우위)
+
+[해석가능성]
+[15] R. Selvaraju et al., "Grad-CAM", IEEE ICCV, 2017.
+[16] R. Draelos, L. Carin, "Use HiResCAM instead of Grad-CAM for Faithful
+     Explanations of CNNs", arXiv:2011.08891, 2020/2021.
+[17] S. Abnar, W. Zuidema, "Quantifying Attention Flow in Transformers",
+     ACL, 2020.
+
+[불확실성 정량화]
+[18] A. Angelopoulos, S. Bates, "A Gentle Introduction to Conformal
+     Prediction", Foundations and Trends in ML, 2023.
+
+[연합학습·LoRa]
+[19] B. McMahan et al., "Communication-Efficient Learning of Deep Networks
+     from Decentralized Data (FedAvg)", AISTATS, 2017.
+[20] "FedLoRa: IoT Spectrum Sensing Through Fast and Energy-Efficient
+     Federated Learning in LoRa Networks", IEEE MASS, 2024.
+[21] "Resource Efficient Federated LoRaWAN Architecture for Far-Edge IoT
+     Applications", IEEE Access, 2025. (계층적 FL+KD+FCA-LoRa MAC)
+[22] "Federated Learning Framework for LoRaWAN-Enabled IIoT Communication:
+     A Case Study", IEEE JIoT, 2025. (건설 기계 이상 탐지, 공중시간 분석)
+[23] "CE-FedAvg: A Communication-Efficient Federated Learning over LoRaWAN",
+     IEEE ICC, 2026. (Top-1% 희소화, 0.75KB/라운드)
+[24] "Dynamic weight quantization for embedded federated learning in LoRa
+     mesh networks", Computers & Electrical Engineering, 2026.
+[25] "Federated learning for remote IoT over LPWAN: Preliminary insights
+     from structural health monitoring", arXiv:2611.11156, 2026. (SF 할당)
+
+[연산·아키텍처]
+[26] W. Sun et al., "Dissecting Tensor Cores via Microbenchmarks",
+     IEEE TPDS 34(1), 2023.
+[27] NVIDIA, "NVIDIA Ada GPU Architecture" whitepaper, 2023.
+
+[통신 규격]
+[28] LoRa Alliance, "LoRaWAN Specification"; 국내 무선설비규칙
+     (920MHz, 14dBm 이하, 송신 전 채널 확인)
 ================================================================================

@@ -99,7 +99,7 @@ def attention_weighted_embed(model, pil_img):
 
 def yolo_hirescam(model, pil_img):
     """HiResCAM (grad ⊙ activation 요소별 곱 → 채널 합산)
-    — 충실도 최상위 CAM 계열 (TPAMI 2023, 현행 설명가능성 표준)
+    — 충실도 최상위 CAM 계열 (Draelos & Carin, arXiv:2011.08891, 2020/21)
     ultralytics 전처리 재사용, DetectionModel 학습모드 forward로 그라디언트 확보"""
     import cv2
     img = cv2.cvtColor(np.array(pil_img.convert("RGB")), cv2.COLOR_RGB2BGR)
