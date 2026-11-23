@@ -112,6 +112,25 @@
     C) 대표 벡터 등록/적응 갱신(코사인 유사도)
   · 서버 /root/workspace/edge-project/scripts/ 에 배포 완료
 
+[2026-11-24] TensorFlow/TFLite·Long-tail 반영 + 환경 사고 복구
+  · longtail.py 추가: E-IRFS(IROS 2025)·CB-Focal(CVPR 2019)·불균형 분석
+  · 참고문헌 28종 → 제안서에 분야별 수록, HiResCAM 서지 정정
+    (Draelos & Carin, arXiv:2011.08891 — 기존 TPAMI 표기 오류였음)
+  · LoRa-FL 선행연구(FedLoRa·CE-FedAvg·JIoT 2025 등 7편) 확인 →
+    차별화를 '대표벡터(수백B) 교환형 초경량 연합'으로 재정의
+  · [사고] 최신 ultralytics(8.4.x)의 TFLite 경로가 LiteRT/jax 스택으로
+    전환되며 numpy 1.x→2.x, torch 2.4→2.14 업그레이드를 유발
+    → flash-attn ABI 파손, RAPIDS(cudf/cupy) 충돌
+  · [복구] NGC 원본 이미지로 컨테이너 재생성 + 전 패키지 버전 고정
+    (ultralytics 8.3.180, transformers 4.44.2, accelerate 0.34.2,
+     datasets 2.21.0, bitsandbytes 0.43.3, peft 0.13.2, numpy 1.26.4)
+    + torch 보호 검증 단계 내장 + libGL 설치
+  · [검증] torch 2.4.0a0/flash-attn 2.4.2/DINOv2/YOLO 전부 정상 복구,
+    ONNX export 12.82MB(opsets17, TensorRT 입력) 확인
+  · [보류] TFLite INT8 변환 — 격리 컨테이너의 버전 매트릭스 충돌
+    (export_tflite.sh에 기록, TF 공식 이미지로 재구성 예정)
+  · 디스크: 고장 컨테이너 제거로 93GB 여유 확보
+
 --------------------------------------------------------------------------------
 5. 측정 데이터
 --------------------------------------------------------------------------------
