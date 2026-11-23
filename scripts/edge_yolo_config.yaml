@@ -1,0 +1,45 @@
+# ============================================================
+# YOLOv8 학습 설정 — 소량 데이터(종류당 50~300장) 최적화
+# 근거: IEEE TII 2025(전이학습+재가중치), DINO-YOLO 2025(소량 데이터 대응)
+# 사용: yolo train data=<yaml> model=yolov8n.pt cfg=scripts/edge_yolo_config.yaml
+# ============================================================
+
+# ---- 데이터/규모 ----
+imgsz: 640            # 자재(박스/포대/롤)는 중대형 객체 — 640 적정
+batch: 16             # 12GB 기준 안전 (OOM 시 8로)
+workers: 4
+epochs: 100
+patience: 30          # 조기 종료 (소량 데이터 과적합 방지)
+
+# ---- 전이학습 (COCO 사전학습 유지, 소량 데이터 대응 핵심) ----
+pretrained: true
+
+# ---- 증강 (현장 조명·각도 변화 대응) ----
+hsv_h: 0.015
+hsv_s: 0.7
+hsv_v: 0.4
+degrees: 10.0         # 회전
+translate: 0.1
+scale: 0.5            # 크기 변화 (원근 대응)
+fliplr: 0.5
+mosaic: 1.0           # 초반 에포크
+mixup: 0.1            # 소량 데이터 정규화 효과
+copy_paste: 0.1       # 객체 복사-붙여넣기 (개수 편향 완화)
+close_mosaic: 10      # 후반에는 원본 이미지로 수렴
+
+# ---- 최적화기/스케줄러 ----
+optimizer: AdamW      # weight decay 0.0005
+lr0: 0.01             # 전이학습이므로 소폭 낮춤
+lrf: 0.01
+cos_lr: true          # 코사인 스케줄 + 워밍업
+warmup_epochs: 3
+
+# ---- 안정화 ----
+ema: true             # EMA 가중치로 최종 평가
+weight_decay: 0.0005
+dropout: 0.0
+
+# ---- 캐시/메모리 ----
+cache: false          # RAM 30GB 여유 시 true(학습 가속)
+amp: true             # BF16 혼합정밀도 (언록된 텐서코어 활용)
+seed: 0
