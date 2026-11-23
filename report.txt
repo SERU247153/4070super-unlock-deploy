@@ -95,6 +95,23 @@
   · 작업 위치: /root/workspace/edge-project/{data,models,notebooks,scripts}
   다음: 자재 사진 데이터 확보 → YOLOv8 학습 파이프라인 구축
 
+[2026-11-24] IEEE 2025-2026 문헌 기반 선설정 (메모리 최적화·학습효과 극대화)
+  채택 문헌:
+  · IEEE TII 2025: 건설현장 데이터효율 검출 (전이학습·재가중치·대조학습)
+  · DINO-YOLO 2025: YOLO+DINO 결합, 소량 데이터 +12~14% (아키텍처 근거)
+  · Efficient PEFT on Consumer-GPUs 2026: DINOv2 선형프로브가 미세조정
+    능가, QLoRA/BitFit 메모리·에너지 우위, 정적/적응형 체크포인팅
+  · LORACT 2025: 활성화 저랭크 압축 (참고)
+  적용 내역:
+  · peft 0.21.3 설치 (QLoRA — 2026 문헌 근거로 재채택)
+  · PYTORCH_CUDA_ALLOC_CONF=expandable_segments (torch 임포트 전 주입)
+  · scripts/edge_yolo_config.yaml: COCO 전이학습+증강(mosaic/mixup/
+    copy_paste/조명)+AdamW+코사인LR+EMA+조기종료 (소량 데이터 최적화)
+  · scripts/dinov2_classifier.py: 모드 3종 —
+    A) 선형 프로브(기본) B) QLoRA 4비트+그라디언트 체크포인팅
+    C) 대표 벡터 등록/적응 갱신(코사인 유사도)
+  · 서버 /root/workspace/edge-project/scripts/ 에 배포 완료
+
 --------------------------------------------------------------------------------
 5. 측정 데이터
 --------------------------------------------------------------------------------
