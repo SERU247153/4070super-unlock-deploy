@@ -131,6 +131,22 @@
     (export_tflite.sh에 기록, TF 공식 이미지로 재구성 예정)
   · 디스크: 고장 컨테이너 제거로 93GB 여유 확보
 
+[2026-11-24] LTS 원칙 확정 + 공개 데이터셋 학습 드라이런 (파이프라인 전체 실증)
+  · 인용 정책: IEEE/탑저널·탑컨퍼런스 위주, preprint 명시 (proposal 9절)
+  · LTS 환경 잠금: requirements.lts.txt (315패키지 고정), TF 잔재 완전 제거,
+    torch 2.4.0a0(NGC)/numpy 1.26.4/flash-attn 2.4.2/ultralytics 8.3.180
+  · 드라이런: keremberke/construction-safety-object-detection (HF 미러,
+    Roboflow 공개, 17클래스 — 사람·안전모·조끼 등)
+    - 데이터 변환: COCO 절대 bbox → YOLO 정규화 (drive_construction_safety.py)
+    - 분할: train 307 / val 57 / test 34
+    - YOLOv8n 학습 10에포크(640px, batch16, workers=0) → mAP50 0.312
+    - ONNX 변환 11.7MB(opset17) — 엣지 배포 경로까지 확인
+  · 이슈 해결: 도커 /dev/shm(64MB) 제약 → DataLoader 워커 충돌 → workers=0
+    (edge_yolo_config.yaml에 반영, --ipc=host 컨테이너 시 4~8 복구 가능)
+  · 이로써 "데이터 → 변환 → 학습 → 평가 → ONNX" 전 파이프라인 실증 완료.
+    자재 사진 도착 시 동일 경로에 데이터만 교체하면 됨
+  · 부수 발견: CPU Ryzen 7 7800X3D (iGPU 활용 옵션 유효)
+
 --------------------------------------------------------------------------------
 5. 측정 데이터
 --------------------------------------------------------------------------------
