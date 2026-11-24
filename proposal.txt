@@ -133,6 +133,11 @@
 --------------------------------------------------------------------------------
 9. 참고문헌 (분야별)
 --------------------------------------------------------------------------------
+[인용 정책] IEEE Transactions/Journals 및 동급 저널(TMLR·Automation in
+  Construction·SCIE), 탑 컨퍼런스(CVPR/ICCV/ECCV/NeurIPS/ICLR/ACL) 위주.
+  arXiv 항목은 SOTA 특성상 포함하되 (preprint) 표기 — 정식 게재 시 갱신.
+  ※ WAC-YOLO(소규모 IEEE 학회)는 참고용, 본문 인용 지양
+
 [건설 현장 검출·계수]
  [1] Chen 외, "개선된 YOLOv4 기반 현장 자재 계수 앱", 2024. (연구계획서 인용)
  [2] Wong 외, "실내 공사 현장 감시 영상의 YOLOv4+DenseNet 기반 작업자·자재
@@ -145,7 +150,7 @@
      Construction, 2026. (YOLOv10, mAP50 0.885, 라벨링 30~40% 절감)
  [5] "DINO-YOLO: Self-Supervised Pre-training for Data-Efficient Object
      Detection in Civil Engineering Applications", arXiv:2510.25140, 2025.
-     (YOLOv12+DINOv3, 소량 데이터 +12~14%)
+     (preprint — YOLOv12+DINOv3, 소량 데이터 +12~14%)
  [6] "WAC-YOLO: A Novel Lightweight Detection Algorithm for Safety Equipment
      on Construction Sites", IEEE CEECT, 2025. (1.4M 파라미터, 4.3 GFLOPs)
 
@@ -153,7 +158,7 @@
  [7] G. Jocher et al., "Ultralytics YOLOv8", GitHub, 2023.
  [8] M. Oquab et al., "DINOv2: Learning Robust Visual Features without
      Supervision", TMLR, 2024.
- [9] Meta AI, "DINOv3", arXiv, 2025.
+ [9] Meta AI, "DINOv3", arXiv, 2025. (preprint)
 [10] N. Ravi et al., "SAM 2: Segment Anything in Images and Videos",
      ICLR, 2025. (arXiv:2408.00714)
 [29] S. Wang et al., "DUSt3R: Geometric 3D Vision Made Easy", IEEE CVPR,
@@ -167,7 +172,7 @@
 [33] "VGG-T³: Offline Feed-Forward 3D Reconstruction at Scale",
      IEEE CVPR, 2026. (1k 이미지 54초, 11.6× 가속)
 [34] "Fin3R: Fine-tuning Feed-forward 3D Reconstruction Models via
-     Monocular Knowledge Distillation", arXiv, 2025.
+     Monocular Knowledge Distillation", arXiv, 2025. (preprint)
 [35] X. Wu et al., "An evaluation of DUSt3R/MASt3R/VGGT 3D reconstruction
      (지리공간 도메인)", Geo-spatial Information Science, 2025.
 
@@ -177,15 +182,16 @@
 [12] T. Dettmers et al., "QLoRA: Efficient Finetuning of Quantized LLMs",
      NeurIPS, 2023.
 [13] "Memory-Efficient Fine-Tuning via Low-Rank Activation Compression
-     (LORACT)", arXiv:2509.23472, 2025.
+     (LORACT)", arXiv:2509.23472, 2025. (preprint)
 [14] "Efficient PEFT Methods with Adaptive Checkpointing for Vision Models
      and VLMs on Resource Constrained Consumer-GPUs", arXiv:2607.02158, 2026.
-     (DINOv2 선형프로브가 미세조정 능가, QLoRA/BitFit 에너지 우위)
+     (preprint — DINOv2 선형프로브가 미세조정 능가, QLoRA/BitFit 에너지 우위)
 
 [해석가능성]
 [15] R. Selvaraju et al., "Grad-CAM", IEEE ICCV, 2017.
 [16] R. Draelos, L. Carin, "Use HiResCAM instead of Grad-CAM for Faithful
-     Explanations of CNNs", arXiv:2011.08891, 2020/2021.
+     Explanations of CNNs", arXiv:2011.08891, 2020/2021. (preprint —
+     설명가능성 표준 인용, 정식 저널 게재 없음)
 [17] S. Abnar, W. Zuidema, "Quantifying Attention Flow in Transformers",
      ACL, 2020.
 
@@ -207,7 +213,8 @@
 [24] "Dynamic weight quantization for embedded federated learning in LoRa
      mesh networks", Computers & Electrical Engineering, 2026.
 [25] "Federated learning for remote IoT over LPWAN: Preliminary insights
-     from structural health monitoring", arXiv:2611.11156, 2026. (SF 할당)
+     from structural health monitoring", arXiv:2611.11156, 2026.
+     (preprint — SF 할당)
 
 [연산·아키텍처]
 [26] W. Sun et al., "Dissecting Tensor Cores via Microbenchmarks",
