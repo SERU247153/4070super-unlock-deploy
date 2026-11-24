@@ -85,6 +85,9 @@
   A+. 3D 구조·체적 기반 검증 (DUSt3R[29]/VGGT[30] 계층)
      - 적치장 사진으로 3D 재구성 → 더미 체적 변화로 입출고 교차검증
        (2D 개수만으로는 가림/포개짐 오류 — 3D가 보완)
+     - VGGT 후속연구 급증(VGGT-Ω[32], VGG-T³[33], Fin3R[34], 지리공간 평가[35])
+       = 적시성 높은 방향이나, **건설 자재 적치장 도메인 적용은 공백**
+       → 도메인 적용 + 체적 기반 입출고 검증이 본 연구의 기여 포인트
   B. 대표벡터 교환형 초경량 연합학습 (LoRa)
      - LoRa 기반 FL은 2024-2026 활발[21][22][23][24][25][26] — 단, 모두
        모델 가중치(수 KB~수백 KB) 교환. 본 연구는 **대표벡터(수백 바이트)만
@@ -144,6 +147,14 @@
      IEEE CVPR, 2025. (Meta/Oxford — 단일 모델로 카메라·깊이·포인트맵 예측)
 [31] V. Leroy et al., "Grounding Image Matching in 3D with MASt3R",
      ECCV, 2024. (DUSt3R에 매칭 결합)
+[32] "VGGT-Ω: Feed-Forward 3D Reconstruction (정적·동적 장면 확장)",
+     IEEE CVPR, 2026.
+[33] "VGG-T³: Offline Feed-Forward 3D Reconstruction at Scale",
+     IEEE CVPR, 2026. (1k 이미지 54초, 11.6× 가속)
+[34] "Fin3R: Fine-tuning Feed-forward 3D Reconstruction Models via
+     Monocular Knowledge Distillation", arXiv, 2025.
+[35] X. Wu et al., "An evaluation of DUSt3R/MASt3R/VGGT 3D reconstruction
+     (지리공간 도메인)", Geo-spatial Information Science, 2025.
 
 [PEFT·메모리 효율]
 [11] E. Hu et al., "LoRA: Low-Rank Adaptation of Large Language Models",
